@@ -1,13 +1,33 @@
 #!/bin/bash
 
+# First, install minikube if not already done:
+if ! which -s /usr/local/bin/minikube ; then
+	curl -Lo minikube https://storage.googleapis.com/minikube/releases/v0.9.0/minikube-darwin-amd64 # ! Check for newer version of minikube
+	chmod +x minikube
+	mv minikube /usr/local/bin/
+fi
+
+# Then, start minikube:
+minikube_status=$(minikube status)
+if [ "$minikube_status" = "Stopped" -o "$minikube_status" = "Does Not Exist" ] ; then
+	minikube start
+fi
+
+# Open minikube dashboard
+kubectl config use-context minikube
+kubectl get pods --all-namespaces
+minikube dashboard
+
 kubectl create -f pv_minikube_internal.yaml
 kubectl create -f pvc-galaxy.yaml
 kubectl get pv
 kubectl get pvc
 
+kubectl delete pods,services --all
 kubectl create -f galaxy-k8s-service.yaml
 #kubectl create -f galaxy-k8s-rc-user.yaml
-kubectl create -f galaxy-k8s-rc-dev.yaml
+#kubectl create -f galaxy-k8s-rc.yaml
+kubectl create -f https://raw.githubusercontent.com/phnmnl/docker-galaxy-k8s-runtime/master/deployment/galaxy_rc.yaml
 ip=$(kubectl cluster-info | grep 'Kubernetes master' | sed 's!^.*https://\(.*\):.*$!\1!')
 port=$(kubectl describe svc/galaxy-svc-k8s | grep ^NodePort | sed 's!^.*[[:space:]]\([[:digit:]]*\)/.*$!\1!')
 echo Galaxy is available at \"http://$ip:$port\".
