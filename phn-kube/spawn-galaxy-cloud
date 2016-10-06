@@ -27,7 +27,8 @@ kubectl delete pods,services --all
 kubectl create -f galaxy-k8s-service.yaml
 #kubectl create -f galaxy-k8s-rc-user.yaml
 #kubectl create -f galaxy-k8s-rc.yaml
-kubectl create -f https://raw.githubusercontent.com/phnmnl/docker-galaxy-k8s-runtime/master/deployment/galaxy_rc.yaml
+#kubectl create -f https://raw.githubusercontent.com/phnmnl/docker-galaxy-k8s-runtime/master/deployment/galaxy_rc.yaml
+kubectl create -f galaxy-k8s-rc-dev.yaml
 ip=$(kubectl cluster-info | grep 'Kubernetes master' | sed 's!^.*https://\(.*\):.*$!\1!')
 port=$(kubectl describe svc/galaxy-svc-k8s | grep ^NodePort | sed 's!^.*[[:space:]]\([[:digit:]]*\)/.*$!\1!')
 echo Galaxy is available at \"http://$ip:$port\".
