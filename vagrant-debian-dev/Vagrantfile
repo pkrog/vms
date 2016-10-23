@@ -1,0 +1,18 @@
+# -*- mode: ruby -*-
+# vi: ft=ruby ts=2 et
+
+Vagrant.configure(2) do |config|
+
+  config.vm.box = "debian/jessie64"
+  config.vm.hostname = "debian-dev"
+
+  config.vm.provider "virtualbox" do |v|
+#    v.gui = true
+  end
+  
+  config.vm.provision :shell, inline: "apt-get update"
+  config.vm.provision :shell, inline: "apt-get upgrade -y"
+  config.vm.provision :shell, inline: "apt-get install -y git vim zip"
+#  config.vm.provision :shell, inline: "apt-get install -y xfce4 virtualbox-guest-dkms virtualbox-guest-utils virtualbox-guest-x11"
+
+end
