@@ -38,13 +38,13 @@ spec:
               claimName: galaxy-pvc
         - name: galaxy-ini
           hostPath:
-            path: /Users/pierrick/dev/vms/phn-kube/config/galaxy.ini
+            path: /Users/pierrick/dev/container-galaxy-k8s-runtime/config/galaxy.ini
         - name: galaxy-job-conf
           hostPath:
-            path: /Users/pierrick/dev/vms/phn-kube/config/job_conf.xml
+            path: /Users/pierrick/dev/container-galaxy-k8s-runtime/config/job_conf.xml
         - name: galaxy-tool-conf
           hostPath:
-            path: /Users/pierrick/dev/vms/phn-kube/config/tool_conf.xml
+            path: /Users/pierrick/dev/container-galaxy-k8s-runtime/config/tool_conf.xml
         - name: phenomenal-tools
           hostPath:
-            path: /Users/pierrick/dev/vms/phn-kube/tools/phenomenal
+            path: /Users/pierrick/dev/container-galaxy-k8s-runtime/tools/phenomenal
