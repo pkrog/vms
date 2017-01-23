@@ -8,8 +8,8 @@ if ! which -s /usr/local/bin/minikube ; then
 fi
 
 # Then, start minikube:
-minikube_status=$(minikube status)
-if [ "$minikube_status" = "Stopped" -o "$minikube_status" = "Does Not Exist" ] ; then
+minikube_stopped=$(minikube status | grep '\(Stopped\|Does\ Not\ Exist\)')
+if [ -n "$minikube_stopped" ] ; then
 	minikube start
 fi
 
