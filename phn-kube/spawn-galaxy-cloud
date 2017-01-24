@@ -10,7 +10,7 @@ fi
 # Then, start minikube:
 minikube_stopped=$(minikube status | grep '\(Stopped\|Does\ Not\ Exist\)')
 if [ -n "$minikube_stopped" ] ; then
-	minikube start
+	minikube start --memory 4096
 fi
 
 # Open minikube dashboard
