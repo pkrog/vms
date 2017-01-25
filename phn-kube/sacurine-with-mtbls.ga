@@ -2,7 +2,7 @@
     "a_galaxy_workflow": "true", 
     "annotation": "", 
     "format-version": "0.1", 
-    "name": "w4m-sacurine-statistics (imported from uploaded file)", 
+    "name": "phn-w4m-sacurine-workflow", 
     "steps": {
         "0": {
             "annotation": "", 
@@ -26,43 +26,44 @@
                     "type": "tabular"
                 }, 
                 {
-                    "name": "w4m_matrix_metadata", 
+                    "name": "w4m_data_matrix", 
                     "type": "tabular"
                 }
             ], 
             "position": {
-                "left": 200, 
-                "top": 567.5
+                "left": 122, 
+                "top": 283
             }, 
             "post_job_actions": {
                 "HideDatasetActionhtml_output": {
                     "action_arguments": {}, 
                     "action_type": "HideDatasetAction", 
                     "output_name": "html_output"
-                }, 
-                "HideDatasetActionw4m_matrix_metadata": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "w4m_matrix_metadata"
-                }, 
-                "HideDatasetActionw4m_sample_metadata": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "w4m_sample_metadata"
-                }, 
-                "HideDatasetActionw4m_variable_metadata": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "w4m_variable_metadata"
                 }
             }, 
             "tool_errors": null, 
             "tool_id": "mtbls-dwnld", 
-            "tool_state": "{\"__page__\": 0, \"study\": \"\\\"MTBLS404\\\"\", \"__rerun_remap_job_id__\": null, \"token\": \"\\\"\\\"\"}", 
-            "tool_version": "1.1.1", 
+            "tool_state": "{\"__page__\": 0, \"sample_na_filtering\": \"\\\"Characteristics.gender.\\\"\", \"__rerun_remap_job_id__\": null, \"variable_na_filtering\": \"\\\"mass_to_charge\\\"\", \"token\": \"\\\"\\\"\", \"study\": \"\\\"MTBLS404\\\"\"}", 
+            "tool_version": "1.2.0", 
             "type": "tool", 
-            "uuid": "2ff8a497-3c1f-4f29-808f-f8902dacd4e6", 
-            "workflow_outputs": []
+            "uuid": "60b9f99c-b164-43fa-a934-82c2a0d5ccc0", 
+            "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "w4m_sample_metadata", 
+                    "uuid": "d215eb8c-e096-4c21-ae8e-9ec6ce07574f"
+                }, 
+                {
+                    "label": null, 
+                    "output_name": "w4m_data_matrix", 
+                    "uuid": "fb4aeb7a-dc0a-440b-84b1-3a4a93cb5a7c"
+                }, 
+                {
+                    "label": null, 
+                    "output_name": "w4m_variable_metadata", 
+                    "uuid": "bafd7fb4-8740-4dc3-b180-ace2714a18b3"
+                }
+            ]
         }, 
         "1": {
             "annotation": "", 
@@ -71,7 +72,7 @@
             "input_connections": {
                 "dataMatrix_in": {
                     "id": 0, 
-                    "output_name": "w4m_matrix_metadata"
+                    "output_name": "w4m_data_matrix"
                 }, 
                 "sampleMetadata_in": {
                     "id": 0, 
@@ -113,15 +114,10 @@
                 }
             ], 
             "position": {
-                "left": 697.5, 
+                "left": 544.5, 
                 "top": 609.875
             }, 
             "post_job_actions": {
-                "HideDatasetActioninformation": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "information"
-                }, 
                 "RenameDatasetActionvariableMetadata_out": {
                     "action_arguments": {
                         "newname": "Univariate_variableMetadata"
@@ -132,11 +128,16 @@
             }, 
             "tool_errors": null, 
             "tool_id": "Univariate", 
-            "tool_state": "{\"thrN\": \"\\\"0.05\\\"\", \"__page__\": 0, \"facC\": \"\\\"gender\\\"\", \"__rerun_remap_job_id__\": null, \"sampleMetadata_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"tesC\": \"\\\"ttest\\\"\", \"variableMetadata_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"adjC\": \"\\\"fdr\\\"\", \"dataMatrix_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_state": "{\"thrN\": \"\\\"0.05\\\"\", \"__page__\": 0, \"facC\": \"\\\"Characteristics.gender.\\\"\", \"__rerun_remap_job_id__\": null, \"sampleMetadata_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"tesC\": \"\\\"ttest\\\"\", \"variableMetadata_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"adjC\": \"\\\"fdr\\\"\", \"dataMatrix_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
             "tool_version": "2.2.3", 
             "type": "tool", 
             "uuid": "79d9a6e9-694e-499d-837f-77ce3752558c", 
             "workflow_outputs": [
+                {
+                    "label": null, 
+                    "output_name": "information", 
+                    "uuid": "61ceb9b4-6c52-49bb-a2e5-567c795c7951"
+                }, 
                 {
                     "label": "Univariate_variableMetadata", 
                     "output_name": "variableMetadata_out", 
@@ -145,7 +146,7 @@
                 {
                     "label": null, 
                     "output_name": "figure", 
-                    "uuid": "ff29dc9e-2efa-496a-a4e9-c75ff7a18097"
+                    "uuid": "43a6164b-f4d0-40fc-984f-07dcb2834896"
                 }
             ]
         }, 
@@ -156,7 +157,7 @@
             "input_connections": {
                 "dataMatrix_in": {
                     "id": 0, 
-                    "output_name": "w4m_matrix_metadata"
+                    "output_name": "w4m_data_matrix"
                 }, 
                 "sampleMetadata_in": {
                     "id": 0, 
@@ -202,20 +203,10 @@
                 }
             ], 
             "position": {
-                "left": 986.5, 
+                "left": 833.5, 
                 "top": 447.875
             }, 
             "post_job_actions": {
-                "HideDatasetActionfigure": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "figure"
-                }, 
-                "HideDatasetActioninformation": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "information"
-                }, 
                 "RenameDatasetActionsampleMetadata_out": {
                     "action_arguments": {
                         "newname": "Multivariate_sampleMetadata"
@@ -233,20 +224,30 @@
             }, 
             "tool_errors": null, 
             "tool_id": "Multivariate", 
-            "tool_state": "{\"advGph\": \"{\\\"__current_case__\\\": 0, \\\"opgC\\\": \\\"default\\\"}\", \"__page__\": 0, \"sampleMetadata_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null, \"predI\": \"\\\"1\\\"\", \"respC\": \"\\\"gender\\\"\", \"orthoI\": \"\\\"NA\\\"\", \"advCpt\": \"{\\\"opcC\\\": \\\"default\\\", \\\"__current_case__\\\": 0}\", \"variableMetadata_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"dataMatrix_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"testL\": \"\\\"FALSE\\\"\"}", 
+            "tool_state": "{\"advGph\": \"{\\\"__current_case__\\\": 0, \\\"opgC\\\": \\\"default\\\"}\", \"__page__\": 0, \"sampleMetadata_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null, \"predI\": \"\\\"1\\\"\", \"respC\": \"\\\"Characteristics.gender.\\\"\", \"orthoI\": \"\\\"NA\\\"\", \"advCpt\": \"{\\\"opcC\\\": \\\"default\\\", \\\"__current_case__\\\": 0}\", \"variableMetadata_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"dataMatrix_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"testL\": \"\\\"FALSE\\\"\"}", 
             "tool_version": "2.3.10", 
             "type": "tool", 
             "uuid": "cff48e13-a4ea-4e77-860b-86941632f984", 
             "workflow_outputs": [
                 {
-                    "label": "Multivariate_variableMetadata", 
-                    "output_name": "variableMetadata_out", 
-                    "uuid": "ab6b3005-11ee-47b0-9bd6-99f29b4a85dd"
+                    "label": null, 
+                    "output_name": "information", 
+                    "uuid": "c3cd7d0b-29c3-46c9-874c-a3463dae58c2"
                 }, 
                 {
-                    "label": "Multivariate_sampleMetad", 
+                    "label": null, 
+                    "output_name": "variableMetadata_out", 
+                    "uuid": "153dd933-5946-4e3e-8c9a-7d5309615208"
+                }, 
+                {
+                    "label": null, 
+                    "output_name": "figure", 
+                    "uuid": "23363167-39f6-4039-b8db-d772bd58b512"
+                }, 
+                {
+                    "label": null, 
                     "output_name": "sampleMetadata_out", 
-                    "uuid": "145e2b6b-3622-4bfb-958c-f54c14a2916d"
+                    "uuid": "99c6b3eb-ea56-484f-ae59-013a25e4dac1"
                 }
             ]
         }, 
@@ -257,7 +258,7 @@
             "input_connections": {
                 "dataMatrix_in": {
                     "id": 0, 
-                    "output_name": "w4m_matrix_metadata"
+                    "output_name": "w4m_data_matrix"
                 }, 
                 "sampleMetadata_in": {
                     "id": 2, 
@@ -303,25 +304,10 @@
                 }
             ], 
             "position": {
-                "left": 1385.5, 
+                "left": 1232.5, 
                 "top": 268.875
             }, 
             "post_job_actions": {
-                "HideDatasetActionfigure_boxplot": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "figure_boxplot"
-                }, 
-                "HideDatasetActionfigure_tier": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "figure_tier"
-                }, 
-                "HideDatasetActioninformation": {
-                    "action_arguments": {}, 
-                    "action_type": "HideDatasetAction", 
-                    "output_name": "information"
-                }, 
                 "RenameDatasetActionvariableMetadata_out": {
                     "action_arguments": {
                         "newname": "Biosigner_variableMetadata"
@@ -332,18 +318,33 @@
             }, 
             "tool_errors": null, 
             "tool_id": "biosigner", 
-            "tool_state": "{\"__page__\": 0, \"sampleMetadata_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null, \"respC\": \"\\\"gender\\\"\", \"variableMetadata_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"advCpt\": \"{\\\"seedI\\\": \\\"123\\\", \\\"tierC\\\": \\\"S\\\", \\\"pvalN\\\": \\\"0.05\\\", \\\"methodC\\\": \\\"all\\\", \\\"__current_case__\\\": 1, \\\"bootI\\\": \\\"50\\\", \\\"opcC\\\": \\\"full\\\"}\", \"dataMatrix_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
+            "tool_state": "{\"__page__\": 0, \"sampleMetadata_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"__rerun_remap_job_id__\": null, \"respC\": \"\\\"Characteristics.gender.\\\"\", \"variableMetadata_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\", \"advCpt\": \"{\\\"seedI\\\": \\\"123\\\", \\\"tierC\\\": \\\"S\\\", \\\"pvalN\\\": \\\"0.05\\\", \\\"methodC\\\": \\\"all\\\", \\\"__current_case__\\\": 1, \\\"bootI\\\": \\\"50\\\", \\\"opcC\\\": \\\"full\\\"}\", \"dataMatrix_in\": \"{\\\"__class__\\\": \\\"RuntimeValue\\\"}\"}", 
             "tool_version": "2.2.7", 
             "type": "tool", 
             "uuid": "bc78ef41-6eee-4fe2-9fdf-e423b1ba33c7", 
             "workflow_outputs": [
                 {
-                    "label": "Biosigner_variableMetadata", 
+                    "label": null, 
+                    "output_name": "figure_tier", 
+                    "uuid": "4597b2bc-0218-4d3b-be05-53df7f27803b"
+                }, 
+                {
+                    "label": null, 
+                    "output_name": "figure_boxplot", 
+                    "uuid": "fae11b06-1723-49e8-b427-06fd6cd86051"
+                }, 
+                {
+                    "label": null, 
                     "output_name": "variableMetadata_out", 
-                    "uuid": "fd01c7c6-2bfb-47c8-9036-ac1a9f00ac57"
+                    "uuid": "625a6e27-87d5-4b43-aeb5-e5e2035a826e"
+                }, 
+                {
+                    "label": null, 
+                    "output_name": "information", 
+                    "uuid": "5fc9f589-6967-4ac1-981b-042e7bbbc821"
                 }
             ]
         }
     }, 
-    "uuid": "04307181-82fa-4909-b6b8-a0e2d8a63a36"
+    "uuid": "5b87a69a-8006-4363-af7d-b8b203eab5a6"
 }
