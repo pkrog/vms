@@ -37,10 +37,11 @@ Vagrant.configure(2) do |config|
   # Install various packages
   config.vm.provision "Install Git.", type: "shell", privileged: true, inline: "apt-get install -y git"
   config.vm.provision "Install Make.", type: "shell", privileged: true, inline: "apt-get install -y make"
+  config.vm.provision "Install Vim.", type: "shell", privileged: true, inline: "apt-get install -y vim"
   
   # Install personnal configuration
   config.vm.provision "Create dev folder.", type: "shell", privileged: false, inline: "mkdir -p dev"
-  config.vm.provision "Clone public configuration.", type: "shell", privileged: false, inline: "cd dev && git clone https://github.com/pkrog/public-config"
+  config.vm.provision "Clone public configuration.", type: "shell", privileged: false, inline: "cd dev && git clone --recursive https://github.com/pkrog/public-config"
   config.vm.provision "Install public configuration.", type: "shell", privileged: false, inline: "cd dev/public-config && make install"
   
   # Install bionconda recipes and testing environment, see https://bioconda.github.io/contribute-a-recipe.html#test-locally

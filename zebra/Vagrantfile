@@ -7,7 +7,7 @@ Vagrant.configure(2) do |config|
   
   # Box
 #  config.vm.box = "ubuntu/trusty64"
-  config.vm.box = "debian/jessie64"
+  config.vm.box = "debian/stretch64"
   
   # VM name
   vm_name = "zebra"
@@ -24,13 +24,17 @@ Vagrant.configure(2) do |config|
   # Network
   config.vm.network :forwarded_port, guest: 8080, host: 8080
 
-  # Install private config (how?)
-  # Check if keys/password are still present in my config and possibly make it public. Split config into mailcfg and devcfg.
-  
+  # Install various packages
+  config.vm.provision "Update the package index files.", type: "shell", privileged: true, inline: "apt-get update"
+  config.vm.provision "Install Git.", type: "shell", privileged: true, inline: "apt-get install -y git"
+  config.vm.provision "Install Make.", type: "shell", privileged: true, inline: "apt-get install -y make"
+  config.vm.provision "Install Vim.", type: "shell", privileged: true, inline: "apt-get install -y vim"
+
   # Install Galaxy
-  config.vm.provision :shell, privileged: true, inline: "apt-get install -y git make python-virtualenv"
-  config.vm.provision :shell, privileged: false, inline: "git clone https://github.com/phnmnl/galaxy"
-  config.vm.provision :shell, privileged: false, inline: "cd galaxy && virtualenv .venv"
-  config.vm.provision :shell, privileged: false, inline: "cd galaxy && source .venv/bin/activate && pip install --upgrade setuptools"
+  config.vm.provision "Install Python virtualenv.", type: "shell", privileged: true, inline: "apt-get install -y python-virtualenv"
+  config.vm.provision "Clone Galaxy.", type: "shell", privileged: false, inline: "git clone https://github.com/phnmnl/galaxy"
+  config.vm.provision "Create virtual environment for Galaxy.", type: "shell", privileged: false, inline: "cd galaxy && virtualenv .venv"
+  config.vm.provision "Running Galaxy.", type: "shell", privileged: false, inline: "cd galaxy && ./run.sh"
+#  config.vm.provision "Upgrade setuptools in virtual env.", type: "shell", privileged: false, inline: "cd galaxy && source .venv/bin/activate && pip install --upgrade setuptools"
 
 end
