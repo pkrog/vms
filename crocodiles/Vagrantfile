@@ -1,0 +1,6 @@
+# -*- mode: ruby -*-
+# vi: ft=ruby sw=0 ts=2 et fdm=marker
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "jhcook/macos-sierra"
+end
