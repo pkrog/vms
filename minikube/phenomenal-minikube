@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# Error {{{1
+################################################################
+
+function error {
+
+	local msg=$1
+
+	echo "ERROR: $msg" >&2
+
+	exit 1
+}
+
+# Start minikube {{{1
+################################################################
+
+function start_minikube {
+	minikube delete
+	rm -rf $HOME/.helm
+	minikube start || error "cannot start minikube !"
+}
+
+# Start helm {{{1
+################################################################
+
+function start_helm {
+
+	helm init || error "cannot initialize helm !"
+	helm repo add galaxy-helm-repo https://pcm32.github.io/galaxy-helm-charts || error "cannot set PhenoMeNal repository in helm."
+
+	# Wait for Tiller to be ready
+	echo Wait for Tiller to be ready...
+	while true ; do
+		tiller_not_ready=$(helm status 2>&1 | grep tiller)
+		[[ -n $tiller_not_ready ]] || break
+	done
+	echo Tiller is ready.
+}
+
+# Helm install {{{1
+################################################################
+
+function helm_install {
+	hosthome=$(echo $HOME | sed s@^/home@/hosthome@)
+	galaxy_admin_email="pk.roger@icloud.com"
+	development_folder="$hosthome/dev/container-galaxy-k8s-runtime"
+	galaxy_admin_password="pierrick"
+	galaxy_api_key="qwertyuio"
+	pv_minikube="yes"
+	chart=galaxy-helm-repo/galaxy
+	echo Install helm chart $chart with following paramaters:
+	echo   development_folder=$development_folder
+	echo   pv_minikube=$pv_minikube
+	echo   galaxy_admin_email=$galaxy_admin_email
+	echo   galaxy_admin_password=$galaxy_admin_password
+	echo   galaxy_api_key=$galaxy_api_key
+	helm install --set galaxy_admin_email="$galaxy_admin_email",galaxy_admin_password="$galaxy_admin_password",galaxy_api_key="$galaxy_api_key",development_folder="$development_folder",pv_minikube="$pv_minikube" $chart || error "cannot run \`helm install\`"
+}
+
+# Open Galaxy {{{1
+################################################################
+
+function open_galaxy {
+
+	# Wait for Galaxy
+	echo -n Wait for Galaxy...
+	while ! wget -O /dev/null http://$(minikube ip):30700 2>/dev/null ; do
+		echo -n .
+		sleep 1
+	done
+	echo
+	echo Galaxy is ready and listening to http://$(minikube ip):30700
+
+	# Open Galaxy page in browser
+	ostype=$(uname)
+	if [[ $ostype = Darwin ]] ; then
+		open=open
+	elif [[ $ostype = Linux ]] ; then
+		open=xdg-open
+	else
+		error "Cannot determine which program to use for opening web page."
+	fi
+	[[ -n $(which $open) ]] || error "Program $open is not available."
+	echo Now opening Galaxy main page in browser...
+	$open http://$(minikube ip):30700
+}
+
+# MAIN {{{1
+################################################################
+
+start_minikube
+start_helm
+helm_install
+open_galaxy
