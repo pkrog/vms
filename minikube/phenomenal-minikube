@@ -1,5 +1,26 @@
 #!/bin/bash
 
+# Constants {{{1
+################################################################
+
+YES=yes
+SCRIPT_NAME="${0##*/}"
+GALAXY_IMAGE=glx
+TOOL2CONTAINER_MAPPING_FILE="phenomenal_tools2container.yaml"
+GALAXY_PULL_POLICY="IfNotPresent"
+
+# Global variables {{{1
+################################################################
+
+BLD_GLX_CONT=
+GALAXY_ADMIN_EMAIL="pk.roger@icloud.com"
+DEVELOPMENT_FOLDER="$HOME/dev/container-galaxy-k8s-runtime"
+DEVELOPMENT_FOLDER_INSIDE_CONTAINER=$(echo $DEVELOPMENT_FOLDER | sed s@^/home@/hosthome@)
+GALAXY_ADMIN_PASSWORD="pierrick"
+GALAXY_API_KEY="qwertyuio"
+PV_MINIKUBE="yes"
+CHART=galaxy-helm-repo/galaxy
+
 # Error {{{1
 ################################################################
 
@@ -11,6 +32,56 @@ function error {
 
 	exit 1
 }
+
+# Join {{{1
+################################################################
+
+function join {
+
+	local IFS="$1";
+	shift;
+
+	echo "$*";
+}
+
+# Print help {{{1
+################################################################
+
+function print_help {
+	echo "Usage: $SCRIPT_NAME [options]"
+	echo
+	echo "Run PhenoMeNal Galaxy inside minikube."
+	echo
+	echo "Options:"
+	echo "   -b, --bld-glx,"
+	echo "   --build-galaxy-container  Build the Galaxy container"
+	echo "   -h, --help                Print this help message."
+	echo
+}
+
+# Read args {{{1
+################################################################
+
+function read_args {
+
+	local args="$*" # save arguments for debugging purpose
+	
+	# Read options
+	while true ; do
+		case $1 in
+			-b|--bld-glx|--build-container) BLD_GLX_CONT=$YES ;;
+			-h|--help)                      print_help ; exit 0 ;;
+			-) error "Illegal option $1." ;;
+			--) error "Illegal option $1." ;;
+			--*) error "Illegal option $1." ;;
+			-?) error "Unknown option $1." ;;
+			-[^-]*) split_opt=$(echo $1 | sed 's/^-//' | sed 's/\([a-zA-Z]\)/ -\1/g') ; set -- $1$split_opt "${@:2}" ;;
+			*) break
+		esac
+		shift
+	done
+	shift $((OPTIND - 1))
+}	
 
 # Start minikube {{{1
 ################################################################
@@ -42,20 +113,23 @@ function start_helm {
 ################################################################
 
 function helm_install {
-	hosthome=$(echo $HOME | sed s@^/home@/hosthome@)
-	galaxy_admin_email="pk.roger@icloud.com"
-	development_folder="$hosthome/dev/container-galaxy-k8s-runtime"
-	galaxy_admin_password="pierrick"
-	galaxy_api_key="qwertyuio"
-	pv_minikube="yes"
-	chart=galaxy-helm-repo/galaxy
-	echo Install helm chart $chart with following paramaters:
-	echo   development_folder=$development_folder
-	echo   pv_minikube=$pv_minikube
-	echo   galaxy_admin_email=$galaxy_admin_email
-	echo   galaxy_admin_password=$galaxy_admin_password
-	echo   galaxy_api_key=$galaxy_api_key
-	helm install --set galaxy_admin_email="$galaxy_admin_email",galaxy_admin_password="$galaxy_admin_password",galaxy_api_key="$galaxy_api_key",development_folder="$development_folder",pv_minikube="$pv_minikube" $chart || error "cannot run \`helm install\`"
+
+	# Set parameters
+	params=()
+	[[ -z $DEVELOPMENT_FOLDER    ]] || params+=("development_folder=$DEVELOPMENT_FOLDER_INSIDE_CONTAINER")
+	[[ -z $PV_MINIKUBE           ]] || params+=("pv_minikube=$PV_MINIKUBE")
+	[[ -z $GALAXY_ADMIN_EMAIL    ]] || params+=("galaxy_admin_email=$GALAXY_ADMIN_EMAIL")
+	[[ -z $GALAXY_ADMIN_PASSWORD ]] || params+=("galaxy_admin_password=$GALAXY_ADMIN_PASSWORD")
+	[[ -z $GALAXY_API_KEY        ]] || params+=("galaxy_api_key=$GALAXY_API_KEY")
+	[[ $BLD_GLX_CONT != $YES || -z $TOOL2CONTAINER_MAPPING_FILE ]] || params+=("tool2container_mapping_file=$TOOL2CONTAINER_MAPPING_FILE")
+	[[ $BLD_GLX_CONT != $YES || -z $GALAXY_IMAGE ]] || params+=("galaxy_image=$GALAXY_IMAGE")
+	[[ $BLD_GLX_CONT != $YES ]] || params+=("galaxy_image_registry=")
+	[[ -z $GALAXY_PULL_POLICY ]] || params+=("galaxy_pull_policy=$GALAXY_PULL_POLICY")
+	params_str=$(join , "${params[@]}")
+
+	# Helm install
+	echo Running helm install --set $params_str $CHART
+	helm install --set $params_str $CHART || error "cannot run \`helm install\`"
 }
 
 # Open Galaxy {{{1
@@ -86,10 +160,24 @@ function open_galaxy {
 	$open http://$(minikube ip):30700
 }
 
+# Build galaxy container {{{1
+################################################################
+
+function build_galaxy_container {
+
+	echo Building Galaxy docker image...
+	eval $(minikube docker-env)
+	env | grep DOCKER
+	docker build -t "$GALAXY_IMAGE" "$DEVELOPMENT_FOLDER"
+}
+
 # MAIN {{{1
 ################################################################
 
+read_args "$@"
+
 start_minikube
 start_helm
+[[ $BLD_GLX_CONT != $YES ]] || build_galaxy_container
 helm_install
 open_galaxy
