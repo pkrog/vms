@@ -20,6 +20,8 @@ GALAXY_ADMIN_PASSWORD="pierrick"
 GALAXY_API_KEY="qwertyuio"
 PV_MINIKUBE="yes"
 CHART=galaxy-helm-repo/galaxy
+MINIKUBE_DASHBOARD=
+OPEN_GALAXY=
 
 # Error {{{1
 ################################################################
@@ -53,9 +55,10 @@ function print_help {
 	echo "Run PhenoMeNal Galaxy inside minikube."
 	echo
 	echo "Options:"
-	echo "   -b, --bld-glx,"
-	echo "   --build-galaxy-container  Build the Galaxy container"
-	echo "   -h, --help                Print this help message."
+	echo "   -b, --build-galaxy-container  Build the Galaxy container."
+	echo "   -d, --minikube-dashboard      Open the minikube dashboard in browser."
+	echo "   -h, --help                    Print this help message."
+	echo "   -x, --open-galaxy             Open Galaxy main page in browser."
 	echo
 }
 
@@ -69,8 +72,10 @@ function read_args {
 	# Read options
 	while true ; do
 		case $1 in
-			-b|--bld-glx|--build-container) BLD_GLX_CONT=$YES ;;
-			-h|--help)                      print_help ; exit 0 ;;
+			-b|--build-container)    BLD_GLX_CONT=$YES ;;
+			-d|--minikube-dashboard) MINIKUBE_DASHBOARD=$YES ;; 
+			-h|--help)               print_help ; exit 0 ;;
+			-x|--open-galaxy)        OPEN_GALAXY=$YES ;;
 			-) error "Illegal option $1." ;;
 			--) error "Illegal option $1." ;;
 			--*) error "Illegal option $1." ;;
@@ -132,19 +137,25 @@ function helm_install {
 	helm install --set $params_str $CHART || error "cannot run \`helm install\`"
 }
 
-# Open Galaxy {{{1
+# Wait for Galaxy {{{1
 ################################################################
 
-function open_galaxy {
+function wait_for_galaxy {
 
 	# Wait for Galaxy
-	echo -n Wait for Galaxy...
+	echo -n Waiting for Galaxy...
 	while ! wget -O /dev/null http://$(minikube ip):30700 2>/dev/null ; do
 		echo -n .
 		sleep 1
 	done
 	echo
 	echo Galaxy is ready and listening to http://$(minikube ip):30700
+}
+
+# Get open application {{{1
+################################################################
+
+function get_open {
 
 	# Open Galaxy page in browser
 	ostype=$(uname)
@@ -156,8 +167,26 @@ function open_galaxy {
 		error "Cannot determine which program to use for opening web page."
 	fi
 	[[ -n $(which $open) ]] || error "Program $open is not available."
+
+	echo $open
+}
+
+# Open Galaxy {{{1
+################################################################
+
+function open_galaxy {
+	open=$(get_open)
 	echo Now opening Galaxy main page in browser...
 	$open http://$(minikube ip):30700
+}
+
+# Open minikube dashboard {{{1
+################################################################
+
+function open_minikube_dashboard {
+	open=$(get_open)
+	echo Now opening Minikube dashboard page in browser...
+	$open http://$(minikube ip):30000
 }
 
 # Build galaxy container {{{1
@@ -177,7 +206,9 @@ function build_galaxy_container {
 read_args "$@"
 
 start_minikube
+[[ $MINIKUBE_DASHBOARD != $YES ]] || open_minikube_dashboard
 start_helm
 [[ $BLD_GLX_CONT != $YES ]] || build_galaxy_container
 helm_install
-open_galaxy
+wait_for_galaxy
+[[ $OPEN_GALAXY != $YES ]] || open_galaxy
