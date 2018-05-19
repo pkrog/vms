@@ -22,6 +22,7 @@ PV_MINIKUBE="yes"
 CHART=galaxy-helm-repo/galaxy
 MINIKUBE_DASHBOARD=
 OPEN_GALAXY=
+GALAXY_LOGS=
 
 # Error {{{1
 ################################################################
@@ -58,6 +59,7 @@ function print_help {
 	echo "   -b, --build-galaxy-container  Build the Galaxy container."
 	echo "   -d, --minikube-dashboard      Open the minikube dashboard in browser."
 	echo "   -h, --help                    Print this help message."
+	echo "   -l, --galaxy-logs             Open stream to Galaxy logs."
 	echo "   -x, --open-galaxy             Open Galaxy main page in browser."
 	echo
 }
@@ -75,6 +77,7 @@ function read_args {
 			-b|--build-container)    BLD_GLX_CONT=$YES ;;
 			-d|--minikube-dashboard) MINIKUBE_DASHBOARD=$YES ;; 
 			-h|--help)               print_help ; exit 0 ;;
+			-l|--galaxy-logs)        GALAXY_LOGS=$YES ;;
 			-x|--open-galaxy)        OPEN_GALAXY=$YES ;;
 			-) error "Illegal option $1." ;;
 			--) error "Illegal option $1." ;;
@@ -95,6 +98,21 @@ function start_minikube {
 	minikube delete
 	rm -rf $HOME/.helm
 	minikube start || error "cannot start minikube !"
+}
+
+# Wait for Minikube {{{1
+################################################################
+
+function wait_for_minikube {
+
+	# Wait for Minikube
+	echo -n Waiting for Minikube...
+	while ! wget -O /dev/null http://$(minikube ip):30000 2>/dev/null ; do
+		echo -n .
+		sleep 1
+	done
+	echo
+	echo Minikube dashboard is ready and listening to http://$(minikube ip):30000
 }
 
 # Start helm {{{1
@@ -200,15 +218,25 @@ function build_galaxy_container {
 	docker build -t "$GALAXY_IMAGE" "$DEVELOPMENT_FOLDER"
 }
 
+# Display Galaxy logs {{{1
+################################################################
+
+function display_galaxy_logs {
+	glx_pod=$(kubectl get pods | grep ^galaxy- | sed 's/ .*$//')
+	kubectl logs -f $glx_pod
+}
+
 # MAIN {{{1
 ################################################################
 
 read_args "$@"
 
 start_minikube
+wait_for_minikube
 [[ $MINIKUBE_DASHBOARD != $YES ]] || open_minikube_dashboard
 start_helm
 [[ $BLD_GLX_CONT != $YES ]] || build_galaxy_container
 helm_install
 wait_for_galaxy
 [[ $OPEN_GALAXY != $YES ]] || open_galaxy
+[[ $GALAXY_LOGS != $YES ]] || display_galaxy_logs
