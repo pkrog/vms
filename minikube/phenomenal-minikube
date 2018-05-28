@@ -23,6 +23,10 @@ CHART=galaxy-helm-repo/galaxy
 MINIKUBE_DASHBOARD=
 OPEN_GALAXY=
 GALAXY_LOGS=
+ALL_STAGES=
+STAGE_1=
+STAGE_2=
+STAGE_3=
 
 # Error {{{1
 ################################################################
@@ -56,6 +60,10 @@ function print_help {
 	echo "Run PhenoMeNal Galaxy inside minikube."
 	echo
 	echo "Options:"
+	echo "   -a, --all-stages              Run all stages."
+	echo "   -1, --stage-1                 Run stage 1."
+	echo "   -2, --stage-2                 Run stage 2."
+	echo "   -3, --stage-3                 Run stage 3."
 	echo "   -b, --build-galaxy-container  Build the Galaxy container."
 	echo "   -d, --minikube-dashboard      Open the minikube dashboard in browser."
 	echo "   -h, --help                    Print this help message."
@@ -74,6 +82,10 @@ function read_args {
 	# Read options
 	while true ; do
 		case $1 in
+			-1|--stage-1)            STAGE_1=$YES ;;
+			-2|--stage-2)            STAGE_2=$YES ;;
+			-3|--stage-3)            STAGE_3=$YES ;;
+			-a|--all-stages)         ALL_STAGES=$YES ;;
 			-b|--build-container)    BLD_GLX_CONT=$YES ;;
 			-d|--minikube-dashboard) MINIKUBE_DASHBOARD=$YES ;; 
 			-h|--help)               print_help ; exit 0 ;;
@@ -231,12 +243,24 @@ function display_galaxy_logs {
 
 read_args "$@"
 
-start_minikube
-wait_for_minikube
+# Stage 1, start minikube
+if [[ $ALL_STAGES == $YES || $STAGE_1 == $YES ]] ; then
+	start_minikube
+	wait_for_minikube
+fi
+
 [[ $MINIKUBE_DASHBOARD != $YES ]] || open_minikube_dashboard
-start_helm
+
+# Stage 2 Start Helm
+[[ $ALL_STAGES != $YES && $STAGE_2 != $YES ]] || start_helm
 [[ $BLD_GLX_CONT != $YES ]] || build_galaxy_container
-helm_install
-wait_for_galaxy
+
+# Stage 3 Helm install
+if [[ $ALL_STAGES == $YES || $STAGE_3 == $YES ]] ; then
+	helm_install
+	wait_for_galaxy
+fi
+
 [[ $OPEN_GALAXY != $YES ]] || open_galaxy
+
 [[ $GALAXY_LOGS != $YES ]] || display_galaxy_logs
