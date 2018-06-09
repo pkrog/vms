@@ -24,6 +24,9 @@ Vagrant.configure(2) do |config|
   # Network
   config.vm.network :forwarded_port, guest: 8080, host: 8080
 
+  # X11
+#  config.vm.provision "Install Xfce4.", type: "shell", privileged: true, inline: "apt-get install -y xfce4 xfce4-goodies xdm firefox-esr"
+  
   # Install various packages
   config.vm.provision "Update the package index files.", type: "shell", privileged: true, inline: "apt-get update"
   config.vm.provision "Install Git.", type: "shell", privileged: true, inline: "apt-get install -y git"
@@ -31,10 +34,13 @@ Vagrant.configure(2) do |config|
   config.vm.provision "Install Vim.", type: "shell", privileged: true, inline: "apt-get install -y vim"
 
   # Install Galaxy
+  config.vm.provision "Install Python virtualenv.", type: "shell", privileged: false, path: "install-galaxy"
   config.vm.provision "Install Python virtualenv.", type: "shell", privileged: true, inline: "apt-get install -y python-virtualenv"
-  config.vm.provision "Clone Galaxy.", type: "shell", privileged: false, inline: "git clone https://github.com/phnmnl/galaxy"
-  config.vm.provision "Create virtual environment for Galaxy.", type: "shell", privileged: false, inline: "cd galaxy && virtualenv .venv"
-  config.vm.provision "Running Galaxy.", type: "shell", privileged: false, inline: "cd galaxy && ./run.sh"
+#  config.vm.provision "Clone Galaxy.", type: "shell", privileged: false, inline: "git clone -b release_18.01_plus_isa_runnerRestartJobs https://github.com/phnmnl/galaxy"
+  config.vm.provision "Clone Galaxy.", type: "shell", privileged: false, inline: "git clone -b release_17.09_isa_k8s_resource_limts_runnerRestartJobs https://github.com/phnmnl/galaxy"
+  #config.vm.provision "Create virtual environment for Galaxy.", type: "shell", privileged: false, inline: "cd galaxy && virtualenv .venv"
+#  config.vm.provision "Running Galaxy.", type: "shell", privileged: false, inline: "cd galaxy && ./run.sh"
+  # TODO configure conda_auto_install
 #  config.vm.provision "Upgrade setuptools in virtual env.", type: "shell", privileged: false, inline: "cd galaxy && source .venv/bin/activate && pip install --upgrade setuptools"
 
 end
