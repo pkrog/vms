@@ -160,6 +160,7 @@ function helm_install {
 	[[ $BLD_GLX_CONT != $YES || -z $GALAXY_IMAGE ]] || params+=("galaxy_image=$GALAXY_IMAGE")
 	[[ $BLD_GLX_CONT != $YES ]] || params+=("galaxy_image_registry=")
 	[[ -z $GALAXY_PULL_POLICY ]] || params+=("galaxy_pull_policy=$GALAXY_PULL_POLICY")
+	params+=("rbac_enabled=true")
 	params_str=$(join , "${params[@]}")
 
 	# Helm install
