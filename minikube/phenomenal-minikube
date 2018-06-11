@@ -239,10 +239,33 @@ function display_galaxy_logs {
 	kubectl logs -f $glx_pod
 }
 
+# Check minikube {{{1
+################################################################
+
+check_minikube() {
+	current_version=$(minikube update-check | grep '^Current' | sed 's/^.*: *//')
+	latest_version=$(minikube update-check | grep '^Latest' | sed 's/^.*: *//')
+	echo MINIKUBE CURRENT VERSION IS $current_version
+
+	if [[ $current_version != $latest_version ]] ; then
+		echo
+		echo '****************************************************************'
+		echo 'A MORE RECENT VERSION OF MINIKUBE IS AVAILABLE: $latest_version.'
+		echo '****************************************************************'
+		echo
+	fi
+}
+
 # MAIN {{{1
 ################################################################
 
 read_args "$@"
+
+# Check minikube version
+check_minikube
+
+# TODO Check kubectl version when minikube is running, and check client and server versions.
+# TODO Check helm version when minikube runs
 
 # Stage 1, start minikube
 if [[ $ALL_STAGES == $YES || $STAGE_1 == $YES ]] ; then
