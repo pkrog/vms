@@ -8,6 +8,7 @@ SCRIPT_NAME="${0##*/}"
 GALAXY_IMAGE=glx
 TOOL2CONTAINER_MAPPING_FILE="phenomenal_tools2container.yaml"
 GALAXY_PULL_POLICY="IfNotPresent"
+Z_SHORTCUT=abdDlx
 
 # Global variables {{{1
 ################################################################
@@ -21,12 +22,46 @@ GALAXY_API_KEY="qwertyuio"
 PV_MINIKUBE="yes"
 CHART=galaxy-helm-repo/galaxy
 MINIKUBE_DASHBOARD=
+MINIKUBE_DELETE=
 OPEN_GALAXY=
 GALAXY_LOGS=
 ALL_STAGES=
 STAGE_1=
 STAGE_2=
 STAGE_3=
+DEBUG=0
+
+# Info {{{1
+################################################################
+
+function info {
+
+	local msg=$1
+
+	echo "[INFO] $msg" >&2
+}
+
+# Debug {{{1
+################################################################
+
+function debug {
+
+	local msg=$1
+	local level=$2
+	[[ -n $level ]] || level=1
+
+	[[ $DEBUG -lt $level ]] || echo "[DEBUG] $msg" >&2
+}
+
+# Warning {{{1
+################################################################
+
+function warning {
+
+	local msg=$1
+
+	echo "[WARNING] ***** $msg *****" >&2
+}
 
 # Error {{{1
 ################################################################
@@ -35,7 +70,7 @@ function error {
 
 	local msg=$1
 
-	echo "ERROR: $msg" >&2
+	echo "[ERROR] $msg" >&2
 
 	exit 1
 }
@@ -66,9 +101,11 @@ function print_help {
 	echo "   -3, --stage-3                 Run stage 3."
 	echo "   -b, --build-galaxy-container  Build the Galaxy container."
 	echo "   -d, --minikube-dashboard      Open the minikube dashboard in browser."
+	echo "   -D, --minikube-delete         Delete minikube vm before starting."
 	echo "   -h, --help                    Print this help message."
 	echo "   -l, --galaxy-logs             Open stream to Galaxy logs."
 	echo "   -x, --open-galaxy             Open Galaxy main page in browser."
+	echo "   -z                            Shortcut for -$Z_SHORTCUT."
 	echo
 }
 
@@ -88,28 +125,57 @@ function read_args {
 			-a|--all-stages)         ALL_STAGES=$YES ;;
 			-b|--build-container)    BLD_GLX_CONT=$YES ;;
 			-d|--minikube-dashboard) MINIKUBE_DASHBOARD=$YES ;; 
+			-D)                      MINIKUBE_DELETE=$YES ;;
+			-g|--debug)              DEBUG=$((DEBUG + 1)) ;;
 			-h|--help)               print_help ; exit 0 ;;
 			-l|--galaxy-logs)        GALAXY_LOGS=$YES ;;
 			-x|--open-galaxy)        OPEN_GALAXY=$YES ;;
+			-z)                      set -- $1 -$Z_SHORTCUT "${@:2}" ;;
 			-) error "Illegal option $1." ;;
 			--) error "Illegal option $1." ;;
 			--*) error "Illegal option $1." ;;
 			-?) error "Unknown option $1." ;;
-			-[^-]*) split_opt=$(echo $1 | sed 's/^-//' | sed 's/\([a-zA-Z]\)/ -\1/g') ; set -- $1$split_opt "${@:2}" ;;
+			-[^-]*) split_opt=$(echo $1 | sed 's/^-//' | sed 's/\([a-zA-Z0-9]\)/ -\1/g') ; set -- $1$split_opt "${@:2}" ;;
 			*) break
 		esac
 		shift
 	done
 	shift $((OPTIND - 1))
+
+	# Debug messages
+	debug "Command line arguments: $args"
+	debug "Argument ALL_STAGES=$ALL_STAGES"
+	debug "Argument DEBUG=$DEBUG"
+	debug "Argument STAGE_1=$STAGE_1"
+	debug "Argument MINIKUBE_DELETE=$MINIKUBE_DELETE"
 }	
+
+# Check kubectl {{{1
+################################################################
+
+check_kubectl() {
+
+	[[ -n $(which kubectl) ]] || error "Unable to find kubectl. Please install kubectl. Use \"brew install kubectl\" under macOS or \"apt-get install kubectl\" under Debian systems."
+
+	client_version=$(kubectl version | grep '^Client' | sed 's/^.*GitVersion:"\([^"]*\)".*$/\1/')
+	server_version=$(kubectl version | grep '^Server' | sed 's/^.*GitVersion:"\([^"]*\)".*$/\1/')
+	echo KUBECTL CLIENT VERSION: $client_version
+	echo KUBECTL SERVER VERSION: $server_version
+
+	client_version_no_patch=$(echo $client_version | sed 's/\.[0-9]*$//')
+	server_version_no_patch=$(echo $server_version | sed 's/\.[0-9]*$//')
+	[[ $client_version_no_patch == $server_version_no_patch ]] || error "kubectl version mismatch between client ($client_version) and server ($server_version). Please upgrade your kubeclt installation. Use \"brew upgrade kubectl\" under macOS or \"apt-get upgrade kubectl\" under Debian systems."
+	[[ $client_version == $server_version ]] || warning "kubectl patch version mismatch between client ($client_version) and server ($server_version). You might consider an upgrade of your kubeclt installation. Use \"brew upgrade kubectl\" under macOS or \"apt-get upgrade kubectl\" under Debian systems."
+}
 
 # Start minikube {{{1
 ################################################################
 
 function start_minikube {
-	minikube delete
+	[[ $MINIKUBE_DELETE == $YES ]] && minikube delete
 	rm -rf $HOME/.helm
 	minikube start || error "cannot start minikube !"
+	check_kubectl
 }
 
 # Wait for Minikube {{{1
@@ -127,21 +193,38 @@ function wait_for_minikube {
 	echo Minikube dashboard is ready and listening to http://$(minikube ip):30000
 }
 
+# Check helm {{{1
+################################################################
+
+check_helm() {
+
+	[[ -n $(which helm) ]] || error "Unable to find helm. Please install helm. Use \"brew install kubectl\" under macOS or \"apt-get install kubectl\" under Debian systems."
+
+	# Check versions
+	client_version=$(helm version | grep ^Client | sed 's/^.*SemVer:"\([^"]*\)".*$/\1/')
+	server_version=$(helm version | grep ^Server | sed 's/^.*SemVer:"\([^"]*\)".*$/\1/')
+	info "Helm client version: $client_version"
+	info "Helm server version: $server_version"
+	[[ $client_version == $server_version ]] || error "Helm version mismatch between client version ($client_version) and server version ($server_version). Please upgrade helm."
+}
+
 # Start helm {{{1
 ################################################################
 
 function start_helm {
 
-	helm init || error "cannot initialize helm !"
+	helm init || error "Cannot initialize helm !"
 	helm repo add galaxy-helm-repo https://pcm32.github.io/galaxy-helm-charts || error "cannot set PhenoMeNal repository in helm."
 
 	# Wait for Tiller to be ready
-	echo Wait for Tiller to be ready...
+	info "Wait for Tiller to be ready..."
 	while true ; do
 		tiller_not_ready=$(helm status 2>&1 | grep tiller)
 		[[ -n $tiller_not_ready ]] || break
 	done
-	echo Tiller is ready.
+	info "Tiller is ready."
+
+	check_helm
 }
 
 # Helm install {{{1
@@ -243,17 +326,16 @@ function display_galaxy_logs {
 ################################################################
 
 check_minikube() {
+
+	# Check that is is installed
+	[[ -n $(which minikube) ]] || error "Unable to find minikube. Please install minikube. See https://github.com/kubernetes/minikube/releases."
+
+	# Check version
 	current_version=$(minikube update-check | grep '^Current' | sed 's/^.*: *//')
 	latest_version=$(minikube update-check | grep '^Latest' | sed 's/^.*: *//')
-	echo MINIKUBE CURRENT VERSION IS $current_version
+	info "Your minikube current version is $current_version."
 
-	if [[ $current_version != $latest_version ]] ; then
-		echo
-		echo '****************************************************************'
-		echo 'A MORE RECENT VERSION OF MINIKUBE IS AVAILABLE: $latest_version.'
-		echo '****************************************************************'
-		echo
-	fi
+	[[ $current_version == $latest_version ]] || warning "A more recent version of minikube is available ($latest_version). Your current version is $current_version. Please upgrade to the latest version. See https://github.com/kubernetes/minikube/releases."
 }
 
 # MAIN {{{1
@@ -263,9 +345,6 @@ read_args "$@"
 
 # Check minikube version
 check_minikube
-
-# TODO Check kubectl version when minikube is running, and check client and server versions.
-# TODO Check helm version when minikube runs
 
 # Stage 1, start minikube
 if [[ $ALL_STAGES == $YES || $STAGE_1 == $YES ]] ; then
