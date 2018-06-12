@@ -19,8 +19,9 @@ Z_SHORTCUT=abdDlx
 
 ALL_STAGES=
 BLD_GLX_CONT=
-CHART=galaxy-helm-repo/galaxy
+CHART="galaxy-helm-repo/galaxy"
 DEBUG=0
+DEV=
 DEVELOPMENT_FOLDER=${PHNMNK_CNT_GLX_PATH:-$DFT_DEVELOPMENT_FOLDER}
 GALAXY_ADMIN_EMAIL=${PHNMNK_GLX_ADMIN_EMAIL:-$DFT_GALAXY_ADMIN_EMAIL}
 GALAXY_ADMIN_PASSWORD=${PHNMNK_GLX_ADMIN_PASSWORD:-$DFT_GALAXY_ADMIN_PASSWORD}
@@ -30,6 +31,7 @@ MINIKUBE_DASHBOARD=
 MINIKUBE_DELETE=
 OPEN_GALAXY=
 PV_MINIKUBE="yes"
+RBAC_ENABLED=
 STAGE_1=
 STAGE_2=
 STAGE_3=
@@ -102,16 +104,18 @@ function print_help {
 	echo "   -1, --stage-1                        Run stage 1."
 	echo "   -2, --stage-2                        Run stage 2."
 	echo "   -3, --stage-3                        Run stage 3."
-	echo "   -b, --build-galaxy-container         Build the Galaxy container."
+	echo "   -b, --build-galaxy-container         Build the Galaxy container. Implies --dev."
 	echo "       --cnt-glx-path           <path>  Set the path to the container-galaxy-k8s-runtime cloned repository. Can be set also through environment variable PHNMNK_CNT_GLX_PATH. Default value is $DFT_DEVELOPMENT_FOLDER."
 	echo "   -d, --minikube-dashboard             Open the minikube dashboard in browser."
 	echo "   -D, --minikube-delete                Delete minikube vm before starting."
+	echo "   -e, --dev                            Development mode. Use path set with --cnt-glx-path or PHNMNK_CNT_GLX_PATH env var, to find Galaxy configuration to use and Galaxy tools to install."
 	echo "   -g, --debug                          Debug mode."
 	echo "       --glx-admin-email        <email> Set the email for administrator account in Galaxy. Can be set also through environment variable PHNMNK_GLX_ADMIN_EMAIL. Default value is $DFT_GALAXY_ADMIN_EMAIL."
 	echo "       --glx-admin-password     <pass>  Set the password for administrator account in Galaxy. Can be set also through environment variable PHNMNK_GLX_ADMIN_PASSWORD. Default value is $DFT_GALAXY_ADMIN_PASSWORD."
 	echo "       --glx-api-key            <token> Set the API key to connect to Galaxy. Can be set also through environment variable PHNMNK_GLX_API_KEY. Default value is $DFT_GALAXY_API_KEY."
 	echo "   -h, --help                           Print this help message."
 	echo "   -l, --galaxy-logs                    Open stream to Galaxy logs."
+	echo "   -r, --rbac                           Enable RBAC."
 	echo "   -x, --open-galaxy                    Open Galaxy main page in browser."
 	echo "   -z                                   Shortcut for -$Z_SHORTCUT."
 	echo
@@ -135,13 +139,15 @@ function read_args {
 			-b|--build-container)    BLD_GLX_CONT=$YES ;;
 			--cnt-glx-path)          DEVELOPMENT_FOLDER="$2" ; shift_count=2 ;;
 			-d|--minikube-dashboard) MINIKUBE_DASHBOARD=$YES ;; 
-			-D)                      MINIKUBE_DELETE=$YES ;;
+			-D|--minikube-delete)    MINIKUBE_DELETE=$YES ;;
+			-e|--dev)                DEV=$YES ;;
 			-g|--debug)              DEBUG=$((DEBUG + 1)) ;;
 			--glx-admin-email)       GALAXY_ADMIN_EMAIL="$2" ; shift_count=2 ;;
 			--glx-admin-password)    GALAXY_ADMIN_PASSWORD="$2" ; shift_count=2 ;;
 			--glx-api-key)           GALAXY_API_KEY="$2" ; shift_count=2 ;;
 			-h|--help)               print_help ; exit 0 ;;
 			-l|--galaxy-logs)        GALAXY_LOGS=$YES ;;
+			-r|--rbac)               RBAC_ENABLED=$YES ;;
 			-x|--open-galaxy)        OPEN_GALAXY=$YES ;;
 			-z)                      set -- $1 -$Z_SHORTCUT "${@:2}" ;;
 			-) error "Illegal option $1." ;;
@@ -179,8 +185,8 @@ check_kubectl() {
 
 	client_version=$(kubectl version | grep '^Client' | sed 's/^.*GitVersion:"\([^"]*\)".*$/\1/')
 	server_version=$(kubectl version | grep '^Server' | sed 's/^.*GitVersion:"\([^"]*\)".*$/\1/')
-	echo KUBECTL CLIENT VERSION: $client_version
-	echo KUBECTL SERVER VERSION: $server_version
+	info "kubectl client version: $client_version"
+	info "kubectl server version: $server_version"
 
 	client_version_no_patch=$(echo $client_version | sed 's/\.[0-9]*$//')
 	server_version_no_patch=$(echo $server_version | sed 's/\.[0-9]*$//')
@@ -210,7 +216,7 @@ function wait_for_minikube {
 		sleep 1
 	done
 	echo
-	echo Minikube dashboard is ready and listening to http://$(minikube ip):30000
+	info "Minikube dashboard is ready and listening to http://$(minikube ip):30000"
 }
 
 # Check helm {{{1
@@ -261,7 +267,7 @@ function helm_install {
 
 	# Set parameters
 	params=()
-	[[ -z $DEVELOPMENT_FOLDER    ]] || params+=("development_folder=$(get_dev_folder_inside_container)")
+	[[ ( $DEV == $YES || $BLD_GLX_CONT == $YES ) && -n $DEVELOPMENT_FOLDER    ]] && params+=("development_folder=$(get_dev_folder_inside_container)")
 	[[ -z $PV_MINIKUBE           ]] || params+=("pv_minikube=$PV_MINIKUBE")
 	[[ -z $GALAXY_ADMIN_EMAIL    ]] || params+=("galaxy_admin_email=$GALAXY_ADMIN_EMAIL")
 	[[ -z $GALAXY_ADMIN_PASSWORD ]] || params+=("galaxy_admin_password=$GALAXY_ADMIN_PASSWORD")
@@ -270,11 +276,11 @@ function helm_install {
 	[[ $BLD_GLX_CONT != $YES || -z $GALAXY_IMAGE ]] || params+=("galaxy_image=$GALAXY_IMAGE")
 	[[ $BLD_GLX_CONT != $YES ]] || params+=("galaxy_image_registry=")
 	[[ -z $GALAXY_PULL_POLICY ]] || params+=("galaxy_pull_policy=$GALAXY_PULL_POLICY")
-	params+=("rbac_enabled=true")
+	[[ $RBAC_ENABLED != $YES ]] || params+=("rbac_enabled=true")
 	params_str=$(join , "${params[@]}")
 
 	# Helm install
-	echo Running helm install --set $params_str $CHART
+	info "Running helm install --set $params_str $CHART"
 	helm install --set $params_str $CHART || error "cannot run \`helm install\`"
 }
 
@@ -317,7 +323,7 @@ function get_open {
 
 function open_galaxy {
 	open=$(get_open)
-	echo Now opening Galaxy main page in browser...
+	info "Now opening Galaxy main page in browser..."
 	$open http://$(minikube ip):30700
 }
 
@@ -326,7 +332,7 @@ function open_galaxy {
 
 function open_minikube_dashboard {
 	open=$(get_open)
-	echo Now opening Minikube dashboard page in browser...
+	info "Now opening Minikube dashboard page in browser..."
 	$open http://$(minikube ip):30000
 }
 
@@ -335,7 +341,7 @@ function open_minikube_dashboard {
 
 function build_galaxy_container {
 
-	echo Building Galaxy docker image...
+	info "Building Galaxy docker image..."
 	eval $(minikube docker-env)
 	env | grep DOCKER
 	docker build -t "$GALAXY_IMAGE" "$DEVELOPMENT_FOLDER"
