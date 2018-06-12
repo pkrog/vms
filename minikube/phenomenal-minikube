@@ -3,33 +3,36 @@
 # Constants {{{1
 ################################################################
 
-YES=yes
-SCRIPT_NAME="${0##*/}"
+DFT_DEVELOPMENT_FOLDER=$HOME/dev/container-galaxy-k8s-runtime
+DFT_GALAXY_ADMIN_EMAIL="admin@glx.com"
+DFT_GALAXY_ADMIN_PASSWORD="admin"
+DFT_GALAXY_API_KEY="qwertyuio"
 GALAXY_IMAGE=glx
-TOOL2CONTAINER_MAPPING_FILE="phenomenal_tools2container.yaml"
 GALAXY_PULL_POLICY="IfNotPresent"
+SCRIPT_NAME="${0##*/}"
+TOOL2CONTAINER_MAPPING_FILE="phenomenal_tools2container.yaml"
+YES=yes
 Z_SHORTCUT=abdDlx
 
 # Global variables {{{1
 ################################################################
 
+ALL_STAGES=
 BLD_GLX_CONT=
-GALAXY_ADMIN_EMAIL="pk.roger@icloud.com"
-DEVELOPMENT_FOLDER="$HOME/dev/container-galaxy-k8s-runtime"
-DEVELOPMENT_FOLDER_INSIDE_CONTAINER=$(echo $DEVELOPMENT_FOLDER | sed s@^/home@/hosthome@)
-GALAXY_ADMIN_PASSWORD="pierrick"
-GALAXY_API_KEY="qwertyuio"
-PV_MINIKUBE="yes"
 CHART=galaxy-helm-repo/galaxy
+DEBUG=0
+DEVELOPMENT_FOLDER=${PHNMNK_CNT_GLX_PATH:-$DFT_DEVELOPMENT_FOLDER}
+GALAXY_ADMIN_EMAIL=${PHNMNK_GLX_ADMIN_EMAIL:-$DFT_GALAXY_ADMIN_EMAIL}
+GALAXY_ADMIN_PASSWORD=${PHNMNK_GLX_ADMIN_PASSWORD:-$DFT_GALAXY_ADMIN_PASSWORD}
+GALAXY_API_KEY=${PHNMNK_GLX_API_KEY:-$DFT_GALAXY_API_KEY}
+GALAXY_LOGS=
 MINIKUBE_DASHBOARD=
 MINIKUBE_DELETE=
 OPEN_GALAXY=
-GALAXY_LOGS=
-ALL_STAGES=
+PV_MINIKUBE="yes"
 STAGE_1=
 STAGE_2=
 STAGE_3=
-DEBUG=0
 
 # Info {{{1
 ################################################################
@@ -95,17 +98,22 @@ function print_help {
 	echo "Run PhenoMeNal Galaxy inside minikube."
 	echo
 	echo "Options:"
-	echo "   -a, --all-stages              Run all stages."
-	echo "   -1, --stage-1                 Run stage 1."
-	echo "   -2, --stage-2                 Run stage 2."
-	echo "   -3, --stage-3                 Run stage 3."
-	echo "   -b, --build-galaxy-container  Build the Galaxy container."
-	echo "   -d, --minikube-dashboard      Open the minikube dashboard in browser."
-	echo "   -D, --minikube-delete         Delete minikube vm before starting."
-	echo "   -h, --help                    Print this help message."
-	echo "   -l, --galaxy-logs             Open stream to Galaxy logs."
-	echo "   -x, --open-galaxy             Open Galaxy main page in browser."
-	echo "   -z                            Shortcut for -$Z_SHORTCUT."
+	echo "   -a, --all-stages                     Run all stages."
+	echo "   -1, --stage-1                        Run stage 1."
+	echo "   -2, --stage-2                        Run stage 2."
+	echo "   -3, --stage-3                        Run stage 3."
+	echo "   -b, --build-galaxy-container         Build the Galaxy container."
+	echo "       --cnt-glx-path           <path>  Set the path to the container-galaxy-k8s-runtime cloned repository. Can be set also through environment variable PHNMNK_CNT_GLX_PATH. Default value is $DFT_DEVELOPMENT_FOLDER."
+	echo "   -d, --minikube-dashboard             Open the minikube dashboard in browser."
+	echo "   -D, --minikube-delete                Delete minikube vm before starting."
+	echo "   -g, --debug                          Debug mode."
+	echo "       --glx-admin-email        <email> Set the email for administrator account in Galaxy. Can be set also through environment variable PHNMNK_GLX_ADMIN_EMAIL. Default value is $DFT_GALAXY_ADMIN_EMAIL."
+	echo "       --glx-admin-password     <pass>  Set the password for administrator account in Galaxy. Can be set also through environment variable PHNMNK_GLX_ADMIN_PASSWORD. Default value is $DFT_GALAXY_ADMIN_PASSWORD."
+	echo "       --glx-api-key            <token> Set the API key to connect to Galaxy. Can be set also through environment variable PHNMNK_GLX_API_KEY. Default value is $DFT_GALAXY_API_KEY."
+	echo "   -h, --help                           Print this help message."
+	echo "   -l, --galaxy-logs                    Open stream to Galaxy logs."
+	echo "   -x, --open-galaxy                    Open Galaxy main page in browser."
+	echo "   -z                                   Shortcut for -$Z_SHORTCUT."
 	echo
 }
 
@@ -118,15 +126,20 @@ function read_args {
 	
 	# Read options
 	while true ; do
+		shift_count=1
 		case $1 in
 			-1|--stage-1)            STAGE_1=$YES ;;
 			-2|--stage-2)            STAGE_2=$YES ;;
 			-3|--stage-3)            STAGE_3=$YES ;;
 			-a|--all-stages)         ALL_STAGES=$YES ;;
 			-b|--build-container)    BLD_GLX_CONT=$YES ;;
+			--cnt-glx-path)          DEVELOPMENT_FOLDER="$2" ; shift_count=2 ;;
 			-d|--minikube-dashboard) MINIKUBE_DASHBOARD=$YES ;; 
 			-D)                      MINIKUBE_DELETE=$YES ;;
 			-g|--debug)              DEBUG=$((DEBUG + 1)) ;;
+			--glx-admin-email)       GALAXY_ADMIN_EMAIL="$2" ; shift_count=2 ;;
+			--glx-admin-password)    GALAXY_ADMIN_PASSWORD="$2" ; shift_count=2 ;;
+			--glx-api-key)           GALAXY_API_KEY="$2" ; shift_count=2 ;;
 			-h|--help)               print_help ; exit 0 ;;
 			-l|--galaxy-logs)        GALAXY_LOGS=$YES ;;
 			-x|--open-galaxy)        OPEN_GALAXY=$YES ;;
@@ -138,14 +151,21 @@ function read_args {
 			-[^-]*) split_opt=$(echo $1 | sed 's/^-//' | sed 's/\([a-zA-Z0-9]\)/ -\1/g') ; set -- $1$split_opt "${@:2}" ;;
 			*) break
 		esac
-		shift
+		shift $shift_count
 	done
 	shift $((OPTIND - 1))
+
+	# Check values
+	[[ $BLD_GLX_CONT == $YES && ( -z $DEVELOPMENT_FOLDER || ! -d $DEVELOPMENT_FOLDER ) ]] && error "The path set for container-galaxy-k8s-runtime repository is not valid: \"$DEVELOPMENT_FOLDER\"."
 
 	# Debug messages
 	debug "Command line arguments: $args"
 	debug "Argument ALL_STAGES=$ALL_STAGES"
 	debug "Argument DEBUG=$DEBUG"
+	debug "Argument DEVELOPMENT_FOLDER=$DEVELOPMENT_FOLDER"
+	debug "Argument GALAXY_ADMIN_EMAIL=$GALAXY_ADMIN_EMAIL"
+	debug "Argument GALAXY_ADMIN_PASSWORD=$GALAXY_ADMIN_PASSWORD"
+	debug "Argument GALAXY_API_KEY=$GALAXY_API_KEY"
 	debug "Argument STAGE_1=$STAGE_1"
 	debug "Argument MINIKUBE_DELETE=$MINIKUBE_DELETE"
 }	
@@ -227,6 +247,13 @@ function start_helm {
 	check_helm
 }
 
+# Get dev folder inside container {{{1
+################################################################
+
+get_dev_folder_inside_container() {
+	echo $DEVELOPMENT_FOLDER | sed s@^/home@/hosthome@
+}
+
 # Helm install {{{1
 ################################################################
 
@@ -234,7 +261,7 @@ function helm_install {
 
 	# Set parameters
 	params=()
-	[[ -z $DEVELOPMENT_FOLDER    ]] || params+=("development_folder=$DEVELOPMENT_FOLDER_INSIDE_CONTAINER")
+	[[ -z $DEVELOPMENT_FOLDER    ]] || params+=("development_folder=$(get_dev_folder_inside_container)")
 	[[ -z $PV_MINIKUBE           ]] || params+=("pv_minikube=$PV_MINIKUBE")
 	[[ -z $GALAXY_ADMIN_EMAIL    ]] || params+=("galaxy_admin_email=$GALAXY_ADMIN_EMAIL")
 	[[ -z $GALAXY_ADMIN_PASSWORD ]] || params+=("galaxy_admin_password=$GALAXY_ADMIN_PASSWORD")
@@ -343,11 +370,9 @@ check_minikube() {
 
 read_args "$@"
 
-# Check minikube version
-check_minikube
-
 # Stage 1, start minikube
 if [[ $ALL_STAGES == $YES || $STAGE_1 == $YES ]] ; then
+	check_minikube
 	start_minikube
 	wait_for_minikube
 fi
