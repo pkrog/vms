@@ -240,7 +240,7 @@ check_helm() {
 function start_helm {
 
 	helm init || error "Cannot initialize helm !"
-	helm repo add galaxy-helm-repo https://pcm32.github.io/galaxy-helm-charts || error "cannot set PhenoMeNal repository in helm."
+	helm repo add galaxy-helm-repo https://pcm32.github.io/galaxy-helm-charts || error "cannot set PhenoMeNal Helm repository."
 
 	# Wait for Tiller to be ready
 	info "Wait for Tiller to be ready..."
@@ -277,7 +277,12 @@ function helm_install {
 	[[ $BLD_GLX_CONT != $YES ]] || params+=("galaxy_image_registry=")
 	[[ -z $GALAXY_PULL_POLICY ]] || params+=("galaxy_pull_policy=$GALAXY_PULL_POLICY")
 	[[ $RBAC_ENABLED != $YES ]] || params+=("rbac_enabled=true")
+	params+=("log_file_to_track=galaxy.log")
 	params_str=$(join , "${params[@]}")
+
+	# Helm update
+	info "Running helm update"
+	helm repo update || error "Cannot update PhenoMeNal Helm repository."
 
 	# Helm install
 	info "Running helm install --set $params_str $CHART"
