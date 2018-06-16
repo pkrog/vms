@@ -12,7 +12,9 @@ GALAXY_PULL_POLICY="IfNotPresent"
 SCRIPT_NAME="${0##*/}"
 TOOL2CONTAINER_MAPPING_FILE="phenomenal_tools2container.yaml"
 YES=yes
-Z_SHORTCUT=abdDlx
+Z_SHORTCUT=-abdDlx
+CNT_GLX_17_09=
+CNT_GLX_18_01="-i sneumann/galaxy-web-k8s:v18.01-pheno-dev"
 
 # Global variables {{{1
 ################################################################
@@ -27,9 +29,11 @@ GALAXY_ADMIN_EMAIL=${PHNMNK_GLX_ADMIN_EMAIL:-$DFT_GALAXY_ADMIN_EMAIL}
 GALAXY_ADMIN_PASSWORD=${PHNMNK_GLX_ADMIN_PASSWORD:-$DFT_GALAXY_ADMIN_PASSWORD}
 GALAXY_API_KEY=${PHNMNK_GLX_API_KEY:-$DFT_GALAXY_API_KEY}
 GALAXY_LOGS=
+GALAXY_LOG_FILE=
 MINIKUBE_DASHBOARD=
 MINIKUBE_DELETE=
 OPEN_GALAXY=
+PORT_FORWARDING=
 PV_MINIKUBE="yes"
 RBAC_ENABLED=
 STAGE_1=
@@ -100,24 +104,28 @@ function print_help {
 	echo "Run PhenoMeNal Galaxy inside minikube."
 	echo
 	echo "Options:"
-	echo "   -a, --all-stages                     Run all stages."
-	echo "   -1, --stage-1                        Run stage 1."
-	echo "   -2, --stage-2                        Run stage 2."
-	echo "   -3, --stage-3                        Run stage 3."
-	echo "   -b, --build-galaxy-container         Build the Galaxy container. Implies --dev."
-	echo "       --cnt-glx-path           <path>  Set the path to the container-galaxy-k8s-runtime cloned repository. Can be set also through environment variable PHNMNK_CNT_GLX_PATH. Default value is $DFT_DEVELOPMENT_FOLDER."
-	echo "   -d, --minikube-dashboard             Open the minikube dashboard in browser."
-	echo "   -D, --minikube-delete                Delete minikube vm before starting."
-	echo "   -e, --dev                            Development mode. Use path set with --cnt-glx-path or PHNMNK_CNT_GLX_PATH env var, to find Galaxy configuration to use and Galaxy tools to install."
-	echo "   -g, --debug                          Debug mode."
-	echo "       --glx-admin-email        <email> Set the email for administrator account in Galaxy. Can be set also through environment variable PHNMNK_GLX_ADMIN_EMAIL. Default value is $DFT_GALAXY_ADMIN_EMAIL."
-	echo "       --glx-admin-password     <pass>  Set the password for administrator account in Galaxy. Can be set also through environment variable PHNMNK_GLX_ADMIN_PASSWORD. Default value is $DFT_GALAXY_ADMIN_PASSWORD."
-	echo "       --glx-api-key            <token> Set the API key to connect to Galaxy. Can be set also through environment variable PHNMNK_GLX_API_KEY. Default value is $DFT_GALAXY_API_KEY."
-	echo "   -h, --help                           Print this help message."
-	echo "   -l, --galaxy-logs                    Open stream to Galaxy logs."
-	echo "   -r, --rbac                           Enable RBAC."
-	echo "   -x, --open-galaxy                    Open Galaxy main page in browser."
-	echo "   -z                                   Shortcut for -$Z_SHORTCUT."
+	echo "   -a, --all-stages                        Run all stages."
+	echo "   -1, --stage-1                           Run stage 1."
+	echo "   -2, --stage-2                           Run stage 2."
+	echo "   -3, --stage-3                           Run stage 3."
+	echo "   -b, --build-galaxy-container            Build the Galaxy container. Implies --dev."
+	echo "       --cnt-glx-path           <path>     Set the path to the container-galaxy-k8s-runtime cloned repository. Can be set also through environment variable PHNMNK_CNT_GLX_PATH. Default value is $DFT_DEVELOPMENT_FOLDER."
+	echo "   -d, --minikube-dashboard                Open the minikube dashboard in browser."
+	echo "   -D, --minikube-delete                   Delete minikube vm before starting."
+	echo "   -e, --dev                               Development mode. Use path set with --cnt-glx-path or PHNMNK_CNT_GLX_PATH env var, to find Galaxy configuration to use and Galaxy tools to install."
+	echo "   -g, --debug                             Debug mode."
+	echo "       --glx-admin-email        <email>    Set the email for administrator account in Galaxy. Can be set also through environment variable PHNMNK_GLX_ADMIN_EMAIL. Default value is $DFT_GALAXY_ADMIN_EMAIL."
+	echo "       --glx-admin-password     <pass>     Set the password for administrator account in Galaxy. Can be set also through environment variable PHNMNK_GLX_ADMIN_PASSWORD. Default value is $DFT_GALAXY_ADMIN_PASSWORD."
+	echo "       --glx-api-key            <token>    Set the API key to connect to Galaxy. Can be set also through environment variable PHNMNK_GLX_API_KEY. Default value is $DFT_GALAXY_API_KEY."
+	echo "       --glx-18.01                         Configure for Galaxy 18.01 with options \"$CNT_GLX_18_01\"."
+	echo "   -h, --help                              Print this help message."
+	echo "   -i, --galaxy-image           <image>    Set the Docker Galaxy image to use."
+	echo "   -l, --galaxy-logs                       Open stream to Galaxy logs."
+	echo "   -L, --galaxy-log-file        <filename> Open stream to Galaxy logs."
+	echo "   -p, --port-forwarding                   Forward ports 30000 and 30700 from the virtual machine to the host."
+	echo "   -r, --rbac                              Enable RBAC."
+	echo "   -x, --open-galaxy                       Open Galaxy main page in browser."
+	echo "   -z                                      Shortcut for $Z_SHORTCUT."
 	echo
 }
 
@@ -145,11 +153,15 @@ function read_args {
 			--glx-admin-email)       GALAXY_ADMIN_EMAIL="$2" ; shift_count=2 ;;
 			--glx-admin-password)    GALAXY_ADMIN_PASSWORD="$2" ; shift_count=2 ;;
 			--glx-api-key)           GALAXY_API_KEY="$2" ; shift_count=2 ;;
+			--glx-18.01)             set -- $1 $CNT_GLX_18_01 "${@:2}" ;;
 			-h|--help)               print_help ; exit 0 ;;
+			-i|--galaxy-image)       GALAXY_IMAGE="$2" ; shift_count=2 ;;
 			-l|--galaxy-logs)        GALAXY_LOGS=$YES ;;
+			-L|--galaxy-log-file)    GALAXY_LOG_FILE="$2" ; shift_count=2 ;;
+			-p|--port-forwarding)    PORT_FORWARDING=$YES ;;
 			-r|--rbac)               RBAC_ENABLED=$YES ;;
 			-x|--open-galaxy)        OPEN_GALAXY=$YES ;;
-			-z)                      set -- $1 -$Z_SHORTCUT "${@:2}" ;;
+			-z)                      set -- $1 $Z_SHORTCUT "${@:2}" ;;
 			-) error "Illegal option $1." ;;
 			--) error "Illegal option $1." ;;
 			--*) error "Illegal option $1." ;;
@@ -163,6 +175,7 @@ function read_args {
 
 	# Check values
 	[[ $BLD_GLX_CONT == $YES && ( -z $DEVELOPMENT_FOLDER || ! -d $DEVELOPMENT_FOLDER ) ]] && error "The path set for container-galaxy-k8s-runtime repository is not valid: \"$DEVELOPMENT_FOLDER\"."
+	[[ $BLD_GLX_CONT == $YES ]] && GALAXY_IMAGE=glx
 
 	# Debug messages
 	debug "Command line arguments: $args"
@@ -277,7 +290,7 @@ function helm_install {
 	[[ $BLD_GLX_CONT != $YES ]] || params+=("galaxy_image_registry=")
 	[[ -z $GALAXY_PULL_POLICY ]] || params+=("galaxy_pull_policy=$GALAXY_PULL_POLICY")
 	[[ $RBAC_ENABLED != $YES ]] || params+=("rbac_enabled=true")
-	params+=("log_file_to_track=galaxy.log")
+	[[ -z $GALAXY_LOG_FILE ]] || params+=("log_file_to_track=$GALAXY_LOG_FILE")
 	params_str=$(join , "${params[@]}")
 
 	# Helm update
@@ -376,6 +389,16 @@ check_minikube() {
 	[[ $current_version == $latest_version ]] || warning "A more recent version of minikube is available ($latest_version). Your current version is $current_version. Please upgrade to the latest version. See https://github.com/kubernetes/minikube/releases."
 }
 
+# Set port forwarding {{{1
+################################################################
+
+set_port_forwarding() {
+	info "Setting up port forwarding of minikube virtual machine to host."
+	for port in 30000 30700 ; do
+		VBoxManage controlvm "minikube" natpf1 "minikube$port,tcp,,$port,,$port" || error "Cannot forward port $port from minikube virtual machine to host."
+	done
+}
+
 # MAIN {{{1
 ################################################################
 
@@ -386,6 +409,7 @@ if [[ $ALL_STAGES == $YES || $STAGE_1 == $YES ]] ; then
 	check_minikube
 	start_minikube
 	wait_for_minikube
+	[[ $PORT_FORWARDING != $YES ]] || set_port_forwarding
 fi
 
 [[ $MINIKUBE_DASHBOARD != $YES ]] || open_minikube_dashboard
