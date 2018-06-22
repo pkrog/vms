@@ -35,7 +35,7 @@ MINIKUBE_DELETE=
 OPEN_GALAXY=
 PORT_FORWARDING=
 PV_MINIKUBE="yes"
-RBAC_ENABLED=
+RBAC_NEEDED=
 STAGE_1=
 STAGE_2=
 STAGE_3=
@@ -121,7 +121,7 @@ function print_help {
 	echo "   -h, --help                              Print this help message."
 	echo "   -i, --galaxy-image           <image>    Set the Docker Galaxy image to use."
 	echo "   -l, --galaxy-logs                       Open stream to Galaxy logs."
-	echo "   -L, --galaxy-log-file        <filename> Open stream to Galaxy logs."
+	echo "   -L, --galaxy-log-file        <filename> Set name of Galaxy log file."
 	echo "   -p, --port-forwarding                   Forward ports 30000 and 30700 from the virtual machine to the host."
 	echo "   -r, --rbac                              Enable RBAC."
 	echo "   -x, --open-galaxy                       Open Galaxy main page in browser."
@@ -159,7 +159,7 @@ function read_args {
 			-l|--galaxy-logs)        GALAXY_LOGS=$YES ;;
 			-L|--galaxy-log-file)    GALAXY_LOG_FILE="$2" ; shift_count=2 ;;
 			-p|--port-forwarding)    PORT_FORWARDING=$YES ;;
-			-r|--rbac)               RBAC_ENABLED=$YES ;;
+			-r|--rbac)               RBAC_NEEDED=$YES ;;
 			-x|--open-galaxy)        OPEN_GALAXY=$YES ;;
 			-z)                      set -- $1 $Z_SHORTCUT "${@:2}" ;;
 			-) error "Illegal option $1." ;;
@@ -289,7 +289,7 @@ function helm_install {
 	[[ $BLD_GLX_CONT != $YES || -z $GALAXY_IMAGE ]] || params+=("galaxy_image=$GALAXY_IMAGE")
 	[[ $BLD_GLX_CONT != $YES ]] || params+=("galaxy_image_registry=")
 	[[ -z $GALAXY_PULL_POLICY ]] || params+=("galaxy_pull_policy=$GALAXY_PULL_POLICY")
-	[[ $RBAC_ENABLED != $YES ]] || params+=("rbac_enabled=true")
+	[[ $RBAC_NEEDED != $YES ]] || params+=("rbac_needed=true")
 	[[ -z $GALAXY_LOG_FILE ]] || params+=("log_file_to_track=$GALAXY_LOG_FILE")
 	params_str=$(join , "${params[@]}")
 
