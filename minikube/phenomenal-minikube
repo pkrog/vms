@@ -16,6 +16,7 @@ YES=yes
 Z_SHORTCUT=-abdDlx
 CNT_GLX_17_09=
 CNT_GLX_18_01="-i sneumann/galaxy-web-k8s:v18.01-pheno-dev"
+CNT_GLX_DEVELOP_BRANCH="-abrxdDl -L galaxy.log --enable-postgres --helm-chart-version 0.4.0"
 
 # Global variables {{{1
 ################################################################
@@ -23,6 +24,7 @@ CNT_GLX_18_01="-i sneumann/galaxy-web-k8s:v18.01-pheno-dev"
 ALL_STAGES=
 BLD_GLX_CONT=
 CHART="galaxy-helm-repo/galaxy"
+CHART_VERSION=
 DEBUG=0
 DEV=
 DEVELOPMENT_FOLDER=${PHNMNK_CNT_GLX_PATH:-$DFT_DEVELOPMENT_FOLDER}
@@ -35,8 +37,10 @@ MINIKUBE_DASHBOARD=
 MINIKUBE_DELETE=
 OPEN_GALAXY=
 PORT_FORWARDING=
+POSTGRES=
 PV_MINIKUBE="yes"
 RBAC_NEEDED=
+RUN_GLX_CONT_SCRIPT=
 STAGE_1=
 STAGE_2=
 STAGE_3=
@@ -119,11 +123,15 @@ function print_help {
 	echo "       --glx-admin-password     <pass>     Set the password for administrator account in Galaxy. Can be set also through environment variable PHNMNK_GLX_ADMIN_PASSWORD. Default value is $DFT_GALAXY_ADMIN_PASSWORD."
 	echo "       --glx-api-key            <token>    Set the API key to connect to Galaxy. Can be set also through environment variable PHNMNK_GLX_API_KEY. Default value is $DFT_GALAXY_API_KEY."
 	echo "       --glx-18.01                         Configure for Galaxy 18.01 with options \"$CNT_GLX_18_01\"."
+	echo "       --glx-develop                       Configure for develop branch of container-galaxy-k8s-runtime with options \"$CNT_GLX_DEVELOP_BRANCH\"."
+	echo "       --helm-chart-version     <version>  Set the Helm chart version to use."
+	echo "       --run-glx-cnt-script                Use simplified_galaxy_stable_container_creation.sh script to build Galaxy container."
 	echo "   -h, --help                              Print this help message."
 	echo "   -i, --galaxy-image           <image>    Set the Docker Galaxy image to use."
 	echo "   -l, --galaxy-logs                       Open stream to Galaxy logs."
 	echo "   -L, --galaxy-log-file        <filename> Set name of Galaxy log file."
 	echo "   -p, --port-forwarding                   Forward ports 30000 and 30700 from the virtual machine to the host."
+	echo "       --enable-postgres                   Enable Postgres in Galaxy."
 	echo "   -r, --rbac                              Enable RBAC."
 	echo "   -x, --open-galaxy                       Open Galaxy main page in browser."
 	echo "   -z                                      Shortcut for $Z_SHORTCUT."
@@ -154,13 +162,17 @@ function read_args {
 			--glx-admin-email)       GALAXY_ADMIN_EMAIL="$2" ; shift_count=2 ;;
 			--glx-admin-password)    GALAXY_ADMIN_PASSWORD="$2" ; shift_count=2 ;;
 			--glx-api-key)           GALAXY_API_KEY="$2" ; shift_count=2 ;;
+			--glx-develop)           set -- $1 $CNT_GLX_DEVELOP_BRANCH "${@:2}" ;;
 			--glx-18.01)             set -- $1 $CNT_GLX_18_01 "${@:2}" ;;
 			-h|--help)               print_help ; exit 0 ;;
+			--helm-chart-version)    CHART_VERSION="$2" ; shift_count=2 ;;
 			-i|--galaxy-image)       GALAXY_IMAGE="$2" ; shift_count=2 ;;
 			-l|--galaxy-logs)        GALAXY_LOGS=$YES ;;
 			-L|--galaxy-log-file)    GALAXY_LOG_FILE="$2" ; shift_count=2 ;;
 			-p|--port-forwarding)    PORT_FORWARDING=$YES ;;
+			--enable-postgres)       POSTGRES=$YES ;;
 			-r|--rbac)               RBAC_NEEDED=$YES ;;
+			--run-glx-cnt-script)    RUN_GLX_CONT_SCRIPT=$YES ;;
 			-x|--open-galaxy)        OPEN_GALAXY=$YES ;;
 			-z)                      set -- $1 $Z_SHORTCUT "${@:2}" ;;
 			-) error "Illegal option $1." ;;
@@ -181,13 +193,28 @@ function read_args {
 	# Debug messages
 	debug "Command line arguments: $args"
 	debug "Argument ALL_STAGES=$ALL_STAGES"
+	debug "Argument BLD_GLX_CONT=$BLD_GLX_CONT"
+	debug "Argument CHART=$CHART"
+	debug "Argument CHART_VERSION=$CHART_VERSION"
 	debug "Argument DEBUG=$DEBUG"
+	debug "Argument DEV=$DEV"
 	debug "Argument DEVELOPMENT_FOLDER=$DEVELOPMENT_FOLDER"
 	debug "Argument GALAXY_ADMIN_EMAIL=$GALAXY_ADMIN_EMAIL"
 	debug "Argument GALAXY_ADMIN_PASSWORD=$GALAXY_ADMIN_PASSWORD"
 	debug "Argument GALAXY_API_KEY=$GALAXY_API_KEY"
-	debug "Argument STAGE_1=$STAGE_1"
+	debug "Argument GALAXY_LOGS=$GALAXY_LOGS"
+	debug "Argument GALAXY_LOG_FILE=$GALAXY_LOG_FILE"
+	debug "Argument MINIKUBE_DASHBOARD=$MINIKUBE_DASHBOARD"
 	debug "Argument MINIKUBE_DELETE=$MINIKUBE_DELETE"
+	debug "Argument OPEN_GALAXY=$OPEN_GALAXY"
+	debug "Argument PORT_FORWARDING=$PORT_FORWARDING"
+	debug "Argument POSTGRES=$POSTGRES"
+	debug "Argument PV_MINIKUBE=$PV_MINIKUBE"
+	debug "Argument RBAC_NEEDED=$RBAC_NEEDED"
+	debug "Argument RUN_GLX_CONT_SCRIPT=$RUN_GLX_CONT_SCRIPT"
+	debug "Argument STAGE_1=$STAGE_1"
+	debug "Argument STAGE_2=$STAGE_2"
+	debug "Argument STAGE_3=$STAGE_3"
 }	
 
 # Check kubectl {{{1
@@ -279,9 +306,14 @@ get_dev_folder_inside_container() {
 
 function helm_install {
 
+	# Options
+	opt=
+	[[ $DEBUG -eq 0 ]] || opt+=" --debug"
+	[[ -z $CHART_VERSION ]] || opt+=" --version $CHART_VERSION"
+
 	# Set parameters
 	params=()
-	[[ ( $DEV == $YES || $BLD_GLX_CONT == $YES ) && -n $DEVELOPMENT_FOLDER    ]] && params+=("development_folder=$(get_dev_folder_inside_container)")
+	[[ ( $DEV == $YES || $BLD_GLX_CONT == $YES ) && -n $DEVELOPMENT_FOLDER ]] && params+=("development_folder=$(get_dev_folder_inside_container)")
 	[[ -z $PV_MINIKUBE           ]] || params+=("pv_minikube=$PV_MINIKUBE")
 	[[ -z $GALAXY_ADMIN_EMAIL    ]] || params+=("galaxy_admin_email=$GALAXY_ADMIN_EMAIL")
 	[[ -z $GALAXY_ADMIN_PASSWORD ]] || params+=("galaxy_admin_password=$GALAXY_ADMIN_PASSWORD")
@@ -292,6 +324,8 @@ function helm_install {
 	[[ -z $GALAXY_PULL_POLICY ]] || params+=("galaxy_pull_policy=$GALAXY_PULL_POLICY")
 	[[ $RBAC_NEEDED != $YES ]] || params+=("rbac_needed=true")
 	[[ -z $GALAXY_LOG_FILE ]] || params+=("log_file_to_track=$GALAXY_LOG_FILE")
+	[[ $POSTGRES != $YES ]] || params+=("galaxy_backend_postgres=true")
+	params+=("galaxy_image_tag=:latest")
 	params_str=$(join , "${params[@]}")
 
 	# Helm update
@@ -299,8 +333,8 @@ function helm_install {
 	helm repo update || error "Cannot update PhenoMeNal Helm repository."
 
 	# Helm install
-	info "Running helm install --set $params_str $CHART"
-	helm install --set $params_str $CHART || error "cannot run \`helm install\`"
+	info "Running helm install $opt --set $params_str $CHART"
+	helm install $opt --set $params_str $CHART || error "cannot run \`helm install\`"
 }
 
 # Wait for Galaxy {{{1
@@ -362,12 +396,18 @@ function build_galaxy_container {
 
 	info "Building Galaxy docker images..."
 	eval $(minikube docker-env)
-	opt=
-	[[ $DEBUG != $YES ]] || opt+=" -g"
-	curdir=$(pwd)
-	cd "$DEVELOPMENT_FOLDER"
-	bash simplified_galaxy_stable_container_creation.sh $opt +p -u $USER --web-tag "$GALAXY_IMAGE"
-	cd "$curdir"
+	if [[ $RUN_GLX_CONT_SCRIPT == $YES ]] ; then
+		opt=
+		[[ $DEBUG -eq 0 ]] || opt+=" -g"
+		curdir=$(pwd)
+		cd "$DEVELOPMENT_FOLDER"
+		info "Building docker containers: bash simplified_galaxy_stable_container_creation.sh $opt +p -u $USER --web-tag \"$GALAXY_IMAGE\""
+		bash simplified_galaxy_stable_container_creation.sh $opt +p -u $USER --web-tag "$GALAXY_IMAGE"
+		cd "$curdir"
+	else
+		info "Building docker container: docker build -t \"$GALAXY_IMAGE\" \"$DEVELOPMENT_FOLDER\""
+		docker build -t "$GALAXY_IMAGE" "$DEVELOPMENT_FOLDER"
+	fi
 }
 
 # Display Galaxy logs {{{1
@@ -400,7 +440,7 @@ check_minikube() {
 set_port_forwarding() {
 	info "Setting up port forwarding of minikube virtual machine to host."
 	for port in 30000 30700 ; do
-		VBoxManage controlvm "minikube" natpf1 "minikube$port,tcp,,$port,,$port" || error "Cannot forward port $port from minikube virtual machine to host."
+		VBoxManage controlvm "minikube" natpf1 "minikube$port,tcp,,$p,,$port" || error "Cannot forward port $port from minikube virtual machine to host."
 	done
 }
 
