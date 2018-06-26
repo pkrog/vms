@@ -1,4 +1,5 @@
 #!/bin/bash
+# vi: fdm=marker
 
 # Constants {{{1
 ################################################################
@@ -359,10 +360,14 @@ function open_minikube_dashboard {
 
 function build_galaxy_container {
 
-	info "Building Galaxy docker image..."
+	info "Building Galaxy docker images..."
 	eval $(minikube docker-env)
-	env | grep DOCKER
-	docker build -t "$GALAXY_IMAGE" "$DEVELOPMENT_FOLDER"
+	opt=
+	[[ $DEBUG != $YES ]] || opt+=" -g"
+	curdir=$(pwd)
+	cd "$DEVELOPMENT_FOLDER"
+	bash simplified_galaxy_stable_container_creation.sh $opt +p -u $USER --web-tag "$GALAXY_IMAGE"
+	cd "$curdir"
 }
 
 # Display Galaxy logs {{{1
