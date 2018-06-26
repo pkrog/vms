@@ -325,7 +325,7 @@ function helm_install {
 	[[ $RBAC_NEEDED != $YES ]] || params+=("rbac_needed=true")
 	[[ -z $GALAXY_LOG_FILE ]] || params+=("log_file_to_track=$GALAXY_LOG_FILE")
 	[[ $POSTGRES != $YES ]] || params+=("galaxy_backend_postgres=true")
-	params+=("galaxy_image_tag=:latest")
+#	params+=("galaxy_image_tag=:latest")
 	params_str=$(join , "${params[@]}")
 
 	# Helm update
