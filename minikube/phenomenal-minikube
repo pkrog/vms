@@ -16,7 +16,7 @@ YES=yes
 Z_SHORTCUT=-abdDlx
 CNT_GLX_17_09=
 CNT_GLX_18_01="-i sneumann/galaxy-web-k8s:v18.01-pheno-dev"
-CNT_GLX_DEVELOP_BRANCH="-abrxdDl -L galaxy.log --enable-postgres --helm-chart-version 0.4.0"
+CNT_GLX_DEVELOP_BRANCH="-abrxD -L galaxy.log --enable-postgres --helm-chart-version 0.4.0"
 
 # Global variables {{{1
 ################################################################
@@ -313,7 +313,7 @@ function helm_install {
 
 	# Set parameters
 	params=()
-	[[ ( $DEV == $YES || $BLD_GLX_CONT == $YES ) && -n $DEVELOPMENT_FOLDER ]] && params+=("development_folder=$(get_dev_folder_inside_container)")
+	[[ $DEV == $YES && -n $DEVELOPMENT_FOLDER ]] && params+=("development_folder=$(get_dev_folder_inside_container)")
 	[[ -z $PV_MINIKUBE           ]] || params+=("pv_minikube=$PV_MINIKUBE")
 	[[ -z $GALAXY_ADMIN_EMAIL    ]] || params+=("galaxy_admin_email=$GALAXY_ADMIN_EMAIL")
 	[[ -z $GALAXY_ADMIN_PASSWORD ]] || params+=("galaxy_admin_password=$GALAXY_ADMIN_PASSWORD")
