@@ -231,8 +231,8 @@ check_kubectl() {
 
 	client_version_no_patch=$(echo $client_version | sed 's/\.[0-9]*$//')
 	server_version_no_patch=$(echo $server_version | sed 's/\.[0-9]*$//')
-	[[ $client_version_no_patch == $server_version_no_patch ]] || error "kubectl version mismatch between client ($client_version) and server ($server_version). Please upgrade your kubeclt installation. Use \"brew upgrade kubectl\" under macOS or \"apt-get upgrade kubectl\" under Debian systems."
-	[[ $client_version == $server_version ]] || warning "kubectl patch version mismatch between client ($client_version) and server ($server_version). You might consider an upgrade of your kubeclt installation. Use \"brew upgrade kubectl\" under macOS or \"apt-get upgrade kubectl\" under Debian systems."
+	[[ $client_version < $server_version ]] && error "kubectl client ($client_version) is newer than kubectl server ($server_version). Please upgrade your kubeclt installation. Use \"brew upgrade kubectl\" under macOS or \"apt-get upgrade kubectl\" under Debian systems."
+	[[ $client_version > $server_version ]] && warning "kubectl client ($client_version) is older than kubectl newer ($server_version)."
 }
 
 # Start minikube {{{1
@@ -272,7 +272,8 @@ check_helm() {
 	server_version=$(helm version | grep ^Server | sed 's/^.*SemVer:"\([^"]*\)".*$/\1/')
 	info "Helm client version: $client_version"
 	info "Helm server version: $server_version"
-	[[ $client_version == $server_version ]] || error "Helm version mismatch between client version ($client_version) and server version ($server_version). Please upgrade helm."
+	[[ $client_version > $server_version ]] && warning "Helm client ($client_version) is newer than helm server ($server_version). Please upgrade helm your helm client."
+	[[ $client_version < $server_version ]] && error "Helm client ($client_version) is older than helm server ($server_version)."
 }
 
 # Start helm {{{1
