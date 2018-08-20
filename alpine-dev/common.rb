@@ -22,3 +22,30 @@ def name_vm_from_vagrantfile_name(config)
     end
   end
 end
+
+# Install personal configuration {{{1
+################################################################
+
+def install_personal_config(config)
+  info("Install personal configuration.")
+  config.vm.provision "Install Less.", type: "shell", privileged: true, inline: "apk add less" # To have colors working fine with git, since git uses less for outputing to terminal. Busybox's less does not have the -R option.
+  config.vm.provision "Install Git.", type: "shell", privileged: true, inline: "apk add git"
+  config.vm.provision "Install Make.", type: "shell", privileged: true, inline: "apk add make"
+  config.vm.provision "Install Screen.", type: "shell", privileged: true, inline: "apk add screen"
+  config.vm.provision "Install Vim.", type: "shell", privileged: true, inline: "apk add vim"
+  config.vm.provision "Install Man.", type: "shell", privileged: true, inline: "apk add man man-pages"
+  config.vm.provision "Create dev folder.", type: "shell", privileged: false, inline: "mkdir -p dev"
+  config.vm.provision "Clone public configuration.", type: "shell", privileged: false, inline: "cd dev && git clone --recursive https://github.com/pkrog/public-config"
+  config.vm.provision "Install public configuration.", type: "shell", privileged: false, inline: "cd dev/public-config && make install"
+  config.vm.provision "Clone public notes.", type: "shell", privileged: false, inline: "cd dev && git clone https://github.com/pkrog/public-notes"
+end
+
+# Install R package development framework {{{1
+################################################################
+
+def install_r_pkg_dev_framework(config)
+  info("Install R package development framework.")
+  config.vm.provision "Install gcc.", type: "shell", privileged: true, inline: "apk add gcc"
+  config.vm.provision "Install g++.", type: "shell", privileged: true, inline: "apk add g++"
+  config.vm.provision "Install R.", type: "shell", privileged: true, inline: "apk add R R-dev"
+end

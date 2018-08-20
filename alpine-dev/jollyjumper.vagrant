@@ -13,9 +13,21 @@ Vagrant.configure(2) do |config|
   
   # Set virtualbox parameters
   config.vm.provider :virtualbox do |vb|
-    vb.memory = "1024"
+    vb.memory = "2048"
     vb.gui = false
   end
+
+  install_personal_config(config)
+  install_r_pkg_dev_framework(config)
+  
+  config.vm.provision "Install m4.", type: "shell", privileged: true, inline: "apk add m4"
+  config.vm.provision "Install file.", type: "shell", privileged: true, inline: "apk add file"
+  config.vm.provision "Install libxml2.", type: "shell", privileged: true, inline: "apk add libxml2-dev"
+  config.vm.provision "Install HDF5.", type: "shell", privileged: true, inline: "wget -O hdf5-1.10.1.tar 'https://www.hdfgroup.org/package/bzip2/?wpdmdl=4301' && tar -xf hdf5-1.10.1.tar && cd hdf5-1.10.1 && ./configure --prefix=/usr --enable-cxx && make && make install && cd .. && rm -r hdf5-1.10.1 hdf5-1.10.1.tar"
+  config.vm.provision "Install netCDF", type: "shell", privileged: true, inline: "wget ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.6.1.tar.gz && tar -xzf netcdf-4.6.1.tar.gz && cd netcdf-4.6.1 && ./configure --prefix=/usr && make && make install && cd .. && rm -r netcdf-4.6.1 netcdf-4.6.1.tar.gz"
+  config.vm.provision "Install Risa.", type: "shell", privileged: false, inline: "cd dev && git clone -b feature/w4m_methods https://github.com/pkrog/Risa"
+  config.vm.provision "Install Risa dependencies.", type: "shell", privileged: false, inline: "make -C dev/Risa install.deps"
+  config.vm.provision "Install LaTeX.", type: "shell", privileged: true, inline: "apk add texlive"
   
   # Install Docker CE, see https://docs.docker.com/install/linux/docker-ce/debian/
 #  config.vm.provision "Install needed packages for Docker-CE.", type: "shell", privileged: true, inline: "apt-get install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common"
@@ -29,22 +41,16 @@ Vagrant.configure(2) do |config|
 #  config.vm.provision "Reload VM in order to enable new group \"docker\" for user.", type: "reload"
   
   # Install various packages
-  config.vm.provision "Update the package index files.", type: "shell", privileged: true, inline: "apk update"
-  config.vm.provision "Upgrade installed packages.", type: "shell", privileged: true, inline: "apk upgrade"
-  config.vm.provision "Install Git.", type: "shell", privileged: true, inline: "apk add git"
-  config.vm.provision "Install Make.", type: "shell", privileged: true, inline: "apk add make"
-  config.vm.provision "Install Screen.", type: "shell", privileged: true, inline: "apk add screen"
-  config.vm.provision "Install Vim.", type: "shell", privileged: true, inline: "apk add vim"
-  config.vm.provision "Install Man.", type: "shell", privileged: true, inline: "apk add man man-pages"
-  config.vm.provision "Install Less.", type: "shell", privileged: true, inline: "apk add less" # To have colors working fine with git, since git uses less for outputing to terminal. Busybox's less does not have the -R option.
+#  config.vm.provision "Update the package index files.", type: "shell", privileged: true, inline: "apk update"
+#  config.vm.provision "Upgrade installed packages.", type: "shell", privileged: true, inline: "apk upgrade"
+#  config.vm.provision "Install Python.", type: "shell", privileged: true, inline: "apk add python py-pip"
+#  config.vm.provision "Install Python3.", type: "shell", privileged: true, inline: "apk add python3 py3-pip"
+#  config.vm.provision "Upgrade pip.", type: "shell", privileged: true, inline: "pip install --upgrade pip"
+#  config.vm.provision "Upgrade pip3.", type: "shell", privileged: true, inline: "pip3 install --upgrade pip"
+#  config.vm.provision "Install Gcc.", type: "shell", privileged: true, inline: "apk add gcc"
+#  config.vm.provision "Install gfortran.", type: "shell", privileged: true, inline: "apk add gfortran"
   
-  # Install personnal configuration
-  config.vm.provision "Create dev folder.", type: "shell", privileged: false, inline: "mkdir -p dev"
-  config.vm.provision "Clone public configuration.", type: "shell", privileged: false, inline: "cd dev && git clone --recursive https://github.com/pkrog/public-config"
-  config.vm.provision "Install public configuration.", type: "shell", privileged: false, inline: "cd dev/public-config && make install"
-  config.vm.provision "Clone public notes.", type: "shell", privileged: false, inline: "cd dev && git clone https://github.com/pkrog/public-notes"
-  
-  config.vm.provision "Install Python3 isatools library.", type: "shell", privileged: true, path: "install-isatools.sh"
+#  config.vm.provision "Install Python3 isatools library.", type: "shell", privileged: true, path: "install-isatools.sh"
  
 #  # Install bionconda recipes and testing environment, see https://bioconda.github.io/contribute-a-recipe.html#test-locally
 #  config.vm.provision "Clone bioconda recipes.", type: "shell", privileged: false, inline: "cd dev && git clone https://github.com/bioconda/bioconda-recipes"
