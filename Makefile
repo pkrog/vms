@@ -1,10 +1,20 @@
+MACHINES=jollyjumper
+
 all:
 
-jollyjumper: VM_NAME=jollyjumper
-jollyjumper:
-	cd alpine-dev && vagrant destroy -f $@
-	cd alpine-dev && vagrant up $@
+$(MACHINES): %: .vagrant/machines/%/virtualbox/id
 
-clean:
+%.up: .vagrant/machines/%/virtualbox/id
 
-.PHONY: all clean
+.vagrant/machines/%/virtualbox/id: %.vagrant
+	VAGRANT_VAGRANTFILE=$< vagrant up
+
+%.rebuild: %.clean %.up
+
+%.clean:
+	VAGRANT_VAGRANTFILE=$(basename $@).vagrant vagrant destroy -f
+	[ -z "$$(VBoxManage list vms | grep $(basename $@))" ] || VBoxManage unregistervm --delete $(basename $@)
+
+clean: $(addsuffix .clean,$(MACHINES))
+
+.PHONY: all clean jollyjumper

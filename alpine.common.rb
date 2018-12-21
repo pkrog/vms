@@ -29,7 +29,15 @@ end
 def install_personal_config(config)
   info("Install personal configuration.")
   config.vm.provision "Install Less.", type: "shell", privileged: true, inline: "apk add less" # To have colors working fine with git, since git uses less for outputing to terminal. Busybox's less does not have the -R option.
-  config.vm.provision "Install Git.", type: "shell", privileged: true, inline: "apk add git"
+  
+#  config.vm.provision "Install Git.", type: "shell", privileged: true, inline: "apk add git"
+# Gives error:
+#   jollyjumper: (1/9) Installing libcrypto1.1 (1.1.1a-r1)
+#       jollyjumper: ERROR:
+#             jollyjumper: libcrypto1.1-1.1.1a-r1: trying to overwrite etc/ssl/openssl.cnf owned by libressl2.6-libcrypto
+#           jollyjumper: -2.6.4-r0.
+             
+
   config.vm.provision "Install Make.", type: "shell", privileged: true, inline: "apk add make"
   config.vm.provision "Install Screen.", type: "shell", privileged: true, inline: "apk add screen"
   config.vm.provision "Install Vim.", type: "shell", privileged: true, inline: "apk add vim"

@@ -1,7 +1,7 @@
 # -*- mode: ruby -*-
 # vi: ft=ruby sw=0 ts=2 et fdm=marker
 
-load 'common.rb'
+load 'alpine.common.rb'
 
 # Main {{{1
 ################################################################
@@ -17,6 +17,8 @@ Vagrant.configure(2) do |config|
     vb.gui = false
   end
 
+  config.vm.provision "Package manager update.", type: "shell", privileged: true, inline: "apk update"
+  
   install_personal_config(config)
   install_r_pkg_dev_framework(config)
   
