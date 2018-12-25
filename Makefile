@@ -1,15 +1,21 @@
-MACHINES=jollyjumper
+MACHINES=jollyjumper rantanplan
 
 all:
 
-$(MACHINES): %: .vagrant/machines/%/virtualbox/id
+$(MACHINES): %: %.up
 
-%.up: .vagrant/machines/%/virtualbox/id
+$(addsuffix .ssh,$(MACHINES)): %.ssh: .vagrant/machines/%/virtualbox/id
+	VAGRANT_VAGRANTFILE=$(basename $@).vagrant vagrant ssh
+
+$(addsuffix .halt,$(MACHINES)): %.halt: .vagrant/machines/%/virtualbox/id
+	VAGRANT_VAGRANTFILE=$(basename $@).vagrant vagrant halt
+
+$(addsuffix .up,$(MACHINES)): %.up: .vagrant/machines/%/virtualbox/id
 
 .vagrant/machines/%/virtualbox/id: %.vagrant
 	VAGRANT_VAGRANTFILE=$< vagrant up
 
-%.rebuild: %.clean %.up
+$(addsuffix .rebuild,$(MACHINES)): %.rebuild: %.clean %.up
 
 %.clean:
 	VAGRANT_VAGRANTFILE=$(basename $@).vagrant vagrant destroy -f
