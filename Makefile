@@ -2,6 +2,26 @@ MACHINES=jollyjumper rantanplan
 
 all:
 
+# W4M-VM machines {{{1
+################################################################
+
+joe: joe.up
+
+joe.up:
+	cd w4m-vm && W4MVM_TOOLS=lcmsmatching ./build-vm --name joe --wait
+
+joe.clean:
+	cd w4m-vm && W4MVM_NAME=joe vagrant destroy -f
+
+joe.halt:
+	cd w4m-vm && W4MVM_NAME=joe vagrant halt -f
+
+joe.ssh:
+	cd w4m-vm && W4MVM_NAME=joe vagrant ssh -f
+
+# Machines {{{1
+################################################################
+
 $(MACHINES): %: %.up
 
 $(addsuffix .ssh,$(MACHINES)): %.ssh: .vagrant/machines/%/virtualbox/id
