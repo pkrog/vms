@@ -8,7 +8,7 @@ all:
 joe: joe.up
 
 joe.up:
-	cd w4m-vm && W4MVM_TOOLS=lcmsmatching ./build-vm --name joe --wait
+	cd w4m-vm && ./build-vm --name joe --wait -t lcmsmatching
 
 joe.clean:
 	cd w4m-vm && W4MVM_NAME=joe vagrant destroy -f
@@ -39,7 +39,7 @@ $(addsuffix .rebuild,$(MACHINES)): %.rebuild: %.clean %.up
 
 %.clean:
 	VAGRANT_VAGRANTFILE=$(basename $@).vagrant vagrant destroy -f
-	[ -z "$$(VBoxManage list vms | grep $(basename $@))" ] || VBoxManage unregistervm --delete $(basename $@)
+	[ -z "$$(VBoxManage list vms | grep ^.$(basename $@))" ] || VBoxManage unregistervm --delete $(basename $@)
 
 clean: $(addsuffix .clean,$(MACHINES))
 
