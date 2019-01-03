@@ -1,11 +1,12 @@
 # -*- mode: ruby -*-
 # vi: ft=ruby sw=0 ts=2 et fdm=marker
 
+# Constants {{{1
+################################################################
+
 $os = 'ubuntu'
 $os_version = 'trusty'
 $box = "ubuntu/#{$os_version}64"
-#os = 'alpine'
-#box = 'generic/alpine38'
   
 load 'common.rb'
 
