@@ -1,0 +1,3 @@
+[submodule "w4m-vm"]
+	path = w4m-vm
+	url = https://github.com/workflow4metabolomics/w4m-vm
