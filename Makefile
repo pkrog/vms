@@ -30,6 +30,9 @@ $(addsuffix .ssh,$(MACHINES)): %.ssh: .vagrant/machines/%/virtualbox/id
 $(addsuffix .halt,$(MACHINES)): %.halt: .vagrant/machines/%/virtualbox/id
 	VAGRANT_VAGRANTFILE=$(basename $@).vagrant vagrant halt
 
+$(addsuffix .box.update,$(MACHINES)): %.box.update:
+	VAGRANT_VAGRANTFILE=$(basename $@).vagrant vagrant box update
+
 $(addsuffix .up,$(MACHINES)): %.up: .vagrant/machines/%/virtualbox/id
 
 .vagrant/machines/%/virtualbox/id: %.vagrant

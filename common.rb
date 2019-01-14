@@ -116,22 +116,43 @@ def install_personal_config(config)
 	config.vm.provision "Clone public notes.", type: "shell", privileged: false, inline: "cd dev && git clone https://github.com/pkrog/public-notes"
 end
 
-# Install R package development framework {{{1
+# Install R {{{1
 ################################################################
 
-def install_r_pkg_dev_framework(config)
+def install_r(config:, version: nil)
 	
-	info(config, "Install R package development framework.")
+	info(config, "Install R.")
 
-	install_packages(config, ['gcc', 'g++'])
-
-	if $os == 'ubuntu'
+	# Install latest Ubuntu version
+	if version.nil? and $os == 'ubuntu'
+		
 		# Install most recent R package
 		config.vm.provision "Install new package repos.", type: "shell", privileged: true, inline: "sed -i -e '$adeb http://cran.univ-paris1.fr/bin/linux/ubuntu #{$os_version}-cran35/' /etc/apt/sources.list"
 		config.vm.provision "Install package repos key.", type: "shell", privileged: true, inline: "apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9"
 		update_package_manager(config)
+		install_packages(config, ['gcc', 'g++', 'R'])
+
+	# Install devel version
+	else
+		update_package_manager(config)
+		install_packages(config, ['gcc', 'g++', 'gfortran', 'subversion', 'libreadline-dev', 'zlib1g-dev', 'libbz2-dev', 'liblzma-dev', 'libpcre3-dev', 'libcurl4-openssl-dev'])
+
+		config.vm.provision "Get R devel sources.", type: "shell", privileged: false, inline: "svn checkout https://svn.r-project.org/R/trunk/ r_src"
+
+		config.vm.provision "Get recommended packages.", type: "shell", privileged: false, inline: "cd r_src && ./tools/rsync-recommended"
+
+		config.vm.provision "Compile R devel sources.", type: "shell", privileged: false, inline: "cd r_src && ./configure --with-x=no && make && make check"
+
+		config.vm.provision "Install R devel.", type: "shell", privileged: true, inline: "cd r_src && make install"
 	end
-	install_packages(config, 'R')
+end
+
+# Install R devtools {{{1
+################################################################
+
+def install_r_devtools(config)	
+	
+	info(config, "Install R devtools package.")
 	
 	install_packages(config, ['linux-headers', 'libxml2-dev', 'zlib-dev', 'libcurl-dev', 'gfortran', 'libblas-dev', 'liblapack-dev'])
   
