@@ -1,4 +1,7 @@
-MACHINES=jollyjumper rantanplan
+# vi: fdm=marker
+
+VAGRANT_FILES=$(wildcard *.vagrant)
+MACHINES=$(VAGRANT_FILES:%.vagrant=%)
 
 all:
 
