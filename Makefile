@@ -1,23 +1,27 @@
 MACHINES=jollyjumper rantanplan
+W4M_MACHINES=joe william
 
 all:
 
 # W4M-VM machines {{{1
 ################################################################
 
-joe: joe.up
+joe_args=
+william_args=--prod
 
-joe.up:
-	cd w4m-vm && ./build-vm --name joe --wait -t lcmsmatching
+$(W4M_MACHINES): %: %.up
 
-joe.clean:
-	cd w4m-vm && W4MVM_NAME=joe vagrant destroy -f
+$(addsuffix .up,$(W4M_MACHINES)): %.up:
+	cd w4m-vm && ./build-vm --name $(basename $@) --wait -t lcmsmatching $(value $(basename $@)_args)
 
-joe.halt:
-	cd w4m-vm && W4MVM_NAME=joe vagrant halt -f
+$(addsuffix .clean,$(W4M_MACHINES)): %.clean:
+	cd w4m-vm && W4MVM_NAME=$(basename $@) vagrant destroy -f
 
-joe.ssh:
-	cd w4m-vm && W4MVM_NAME=joe vagrant ssh -f
+$(addsuffix .halt,$(W4M_MACHINES)): %.halt:
+	cd w4m-vm && W4MVM_NAME=$(basename $@) vagrant halt -f
+
+$(addsuffix .ssh,$(W4M_MACHINES)): %.ssh:
+	cd w4m-vm && W4MVM_NAME=$(basename $@) vagrant ssh -f
 
 # Machines {{{1
 ################################################################
