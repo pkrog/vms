@@ -1,0 +1,7 @@
+# XML2
+- name: Install XML2
+  package: name=libxml2-dev state=present
+  
+# Magick++
+- name: Install Magick++
+  package: name=libmagick++-dev state=present

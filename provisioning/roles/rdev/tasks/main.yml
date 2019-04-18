@@ -5,3 +5,11 @@
 
 - include: system.yml
   become: yes
+ 
+# Create user library path
+- name: Make R library user path
+  shell: R -e 'dir.create(Sys.getenv()[["R_LIBS_USER"]], recursive = TRUE, showWarnings = FALSE)'
+ 
+# Devtools
+- name: Install CRAN devtools
+  shell: R -e 'install.packages("devtools", dependencies = TRUE, repos = "https://cloud.r-project.org/")'

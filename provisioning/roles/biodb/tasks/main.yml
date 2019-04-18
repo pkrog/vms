@@ -1,0 +1,10 @@
+- include: system.yml
+  become: yes
+ 
+# Clone biodb 
+- name: Clone biodb
+  git: repo=https://github.com/pkrog/biodb dest=dev/biodb
+  
+# Install biodb dependencies
+- name: Install biodb dependencies
+  shell: "{{ gnumake_prg }} -C dev/biodb install.deps"

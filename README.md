@@ -8,7 +8,6 @@ Machine name | OS version                | Purpose
 averell      | FreeBSD 12                |
 crocodiles   | macOS High Sierra 10.13.4 | 
 guardduck    | Debian 8.10 (Jessie 64)   | bioconda-recipes testing
-jack         | Ubuntu Trusty             | Prototype for Exhalomics project (CEA/Hôpital Foch)
 joe          | Ubuntu Trusty             | Galaxy instance with my tools in DEV version, based on w4m-vm.
 jollyjumper  | Alpine 3.8                | Risa R package dev
 rantanplan   | Ubuntu Trusty             | biodb dev
