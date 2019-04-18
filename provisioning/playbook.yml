@@ -1,6 +1,3 @@
-- hosts: averell
+- hosts: averell rantanplan
   roles:
       - dev
-      
-#      - debug: var=ansible_facts
-

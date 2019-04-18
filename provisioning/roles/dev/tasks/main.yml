@@ -1,7 +1,7 @@
-- include_vars: "{{ item }}"
-  with_first_found:
-    - "../vars/{{ ansible_os_family | lower }}.yml"
-    - "../vars/default.yml"
+- debug: var=ansible_facts
+- include_vars: "../vars/default.yml"
+- include_vars: "../vars/{{ ansible_os_family | lower }}.yml"
+  ignore_errors: yes
 
 - include: system.yml
   become: yes

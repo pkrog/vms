@@ -27,7 +27,19 @@ Vagrant.configure(2) do |config|
   ################################################################
   
   config.vm.define "rantanplan" do |rantanplan|
-    rantanplan.vm.box = "ubuntu/trusty64"
+    rantanplan.vm.box = "ubuntu/bionic64"
+    rantanplan.vm.hostname = "rantanplan"
+    rantanplan.vm.provider :virtualbox do |vb|
+      vb.name = 'rantanplan'
+    end
+#    rantanplan.vm.provision "Update repos.", type: "shell", privileged: true, inline: "apt update"
+#    rantanplan.vm.provision "Install Python.", type: "shell", privileged: true, inline: "apt install -y python" # Needed by Ansible
+    rantanplan.vm.provision :ansible do |ansible|
+      ansible.extra_vars = {
+        ansible_python_interpreter: "python3"
+      }
+      ansible.playbook = "provisioning/playbook.yml"
+    end
   end
   
 end
