@@ -1,0 +1,5 @@
+r_pkg: R R-dev
+linux_headers_pkg: linux-headers
+libcurl_dev_pkg: curl-dev
+libblas_dev_pkg: openblas-dev
+liblapack_dev_pkg: lapack-dev

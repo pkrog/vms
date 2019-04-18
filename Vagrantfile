@@ -30,11 +30,12 @@ Vagrant.configure(2) do |config|
   
   config.vm.define "jollyjumper" do |jollyjumper|
     jollyjumper.vm.box = "generic/alpine38"
+    jollyjumper.vm.guest = :alpine # Needed to set hostname. Inside the box generic/alpine38, the guest is set to "alt" (which is wrong).
     jollyjumper.vm.hostname = "jollyjumper"
     jollyjumper.vm.provider :virtualbox do |vb|
       vb.name = 'jollyjumper'
     end
-    jollyjumper.vm.provision "Install Python.", type: "shell", privileged: true, inline: "apk add python" # Needed by Ansible
+    jollyjumper.vm.provision "Install Python.", type: "shell", privileged: true, inline: "apk add python3" # Needed by Ansible
     jollyjumper.vm.provision :ansible do |ansible|
       ansible.extra_vars = {
         ansible_python_interpreter: "python3"

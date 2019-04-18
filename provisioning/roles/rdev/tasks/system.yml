@@ -1,0 +1,61 @@
+# Debian repos for CRAN
+- name: Install CRAN repos for Ubuntu
+  apt_repository:
+      repo: deb http://cran.irsn.fr/bin/linux/ubuntu bionic-cran35/
+      state: present
+      filename: cran
+  when: ansible_facts['distribution'] == "Ubuntu" and ansible_facts['distribution_major_version'] == "18"
+- name: Install CRAN repos key for Ubuntu
+  apt_key:
+      keyserver: keyserver.ubuntu.com
+      id: 51716619E084DAB9
+  when: ansible_facts['distribution'] == "Ubuntu" and ansible_facts['distribution_major_version'] == "18"
+
+# R
+- name: Install R
+  package: name={{ r_pkg }} state=present
+  
+# automake
+- name: Install automake
+  package: name=automake state=present
+  
+# GCC
+- name: Install gcc
+  package: name=gcc state=present
+  
+# G++
+- name: Install g++
+  package: name=g++ state=present
+  
+  ## Linux headers
+  #- name: Install Linux headers
+  #  package: name={{ linux_headers_pkg }} state=present
+  #  when: linux_headers_pkg is defined
+  #  
+  ## XML2
+  #- name: Install XML2
+  #  package: name=libxml2-dev state=present
+  # 
+  ## Z lib
+  #- name: Install zlib
+  #  package: name={{ zlib_dev_pkg }} state=present
+  #  
+  ## CURL lib
+  #- name: Install CURL lib
+  #  package: name={{ libcurl_dev_pkg }} state=present
+  #  
+  ## Fortran
+  #- name: Install Fortran
+  #  package: name=gfortran state=present
+  #  
+  ## Blas
+  #- name: Install lib blas
+  #  package: name={{ libblas_dev_pkg }} state=present
+  #  
+  ## Lapack
+  #- name: Install lib lapack
+  #  package: name={{ liblapack_dev_pkg }} state=present
+  
+# Devtools
+- name: Install CRAN devtools
+  shell: R -e 'install.packages("devtools", dependencies = TRUE, repos = "https://cloud.r-project.org/")'

@@ -1,0 +1,3 @@
+zlib_dev_pkg: zlib1g-dev
+libcurl_dev_pkg: libcurl4-openssl-dev
+liblapack_dev_pkg: liblapack-dev
