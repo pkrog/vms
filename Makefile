@@ -1,4 +1,4 @@
-MACHINES=jollyjumper rantanplan averell
+MACHINES=jollyjumper
 W4M_MACHINES=joe william
 
 all:
