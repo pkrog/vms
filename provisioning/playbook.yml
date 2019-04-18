@@ -1,0 +1,7 @@
+- hosts: averell
+  become: yes
+  roles:
+      - dev
+      
+#      - debug: var=ansible_facts
+
