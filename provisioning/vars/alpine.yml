@@ -1,3 +1,4 @@
+man_pkg: man man-pages
 r_pkg: R R-dev
 linux_headers_pkg: linux-headers
 libcurl_dev_pkg: curl-dev

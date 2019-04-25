@@ -1,0 +1,9 @@
+# System configuration
+- include: system.yml
+  become: yes
+  
+# Xinitrc
+- name: Create .xinitrc
+  copy:
+      dest: ~/.xinitrc
+      content: ". /usr/local/etc/xdg/xfce4/xinitrc"  # FreeBSD

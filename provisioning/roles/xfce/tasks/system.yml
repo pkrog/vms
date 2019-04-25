@@ -1,0 +1,17 @@
+# Xorg
+- name: Install Xorg # FreeBSD
+  package: name=xorg state={{ pkg_state }}
+
+# Xfce
+- name: Install Xfce  # FreeBSD
+  package: name=xfce state={{ pkg_state }}
+  
+# Enable DBUS
+- name: Enable DBUS # FreeBSD
+  lineinfile:
+      path: /etc/rc.conf
+      line: 'dbus_enable=YES'
+
+# VirtualBox guest additions
+- name: Install VirtualBox guest additions
+  package: name={{ vbox_guest_additions_pkg }} state={{ pkg_state }}

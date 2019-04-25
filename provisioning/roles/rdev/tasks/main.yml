@@ -1,8 +1,4 @@
-#- debug: var=ansible_facts
-- include_vars: "../vars/default.yml"
-- include_vars: "../vars/{{ ansible_os_family | lower }}.yml"
-  ignore_errors: yes
-
+# System configuration
 - include: system.yml
   become: yes
  

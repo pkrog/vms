@@ -1,21 +1,20 @@
 # Git
 - name: Install git
-  package: name=git state=present
+  package: name=git state={{ pkg_state }}
 
 # Make
 - name: Install GNU make
-  package: name={{ gnumake_pkg }} state=present
+  package: name={{ gnumake_pkg }} state={{ pkg_state }}
 
 # Man
 - name: Install man
-  package: name={{ man_pkg }} state=present
+  package: name={{ man_pkg }} state={{ pkg_state }}
   when: man_pkg is defined
 
 # Screen
 - name: Install screen
-  package: name=screen state=present
+  package: name=screen state={{ pkg_state }}
 
 # Vim
 - name: Install vim
-  package: name=vim state=present
-
+  package: name=vim state={{ pkg_state }}

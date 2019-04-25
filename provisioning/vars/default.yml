@@ -1,1 +1,7 @@
+gnumake_pkg: make
 gnumake_prg: make
+pkg_state: latest
+r_pkg: r-base
+zlib_dev_pkg: zlib-dev
+libcurl_dev_pkg: libcurl-dev
+libblas_dev_pkg: libblas-dev

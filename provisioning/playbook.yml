@@ -7,6 +7,7 @@
 - hosts: averell
   roles:
       - dev
+      - xfce
 
 - hosts: jollyjumper
   roles:
