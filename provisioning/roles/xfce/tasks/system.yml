@@ -4,7 +4,7 @@
 
 # Xfce
 - name: Install Xfce  # FreeBSD
-  package: name=xfce state={{ pkg_state }}
+  package: name={{ xfce4_pkg }} state={{ pkg_state }}
   
 # Enable DBUS
 - name: Enable DBUS # FreeBSD

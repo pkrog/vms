@@ -25,6 +25,42 @@ Vagrant.configure(2) do |config|
     end
   end
 
+  # jack {{{2
+  ################################################################
+  
+  config.vm.define "jack" do |jack|
+    jack.vm.box = "archlinux/archlinux"
+    jack.vm.hostname = "jack"
+    jack.vm.provider :virtualbox do |vb|
+      vb.name = 'jack'
+    end
+    jack.vm.provision "Install Python.", type: "shell", privileged: true, inline: "pacman -S --noconfirm extra/python" # Needed by Ansible
+    jack.vm.provision :ansible do |ansible|
+      ansible.extra_vars = {
+        ansible_python_interpreter: "python3"
+      }
+      ansible.playbook = "provisioning/playbook.yml"
+    end
+  end
+  
+  # asterix {{{2
+  ################################################################
+  
+  config.vm.define "asterix" do |asterix|
+    asterix.vm.box = "generic/gentoo"
+    asterix.vm.hostname = "asterix"
+    asterix.vm.provider :virtualbox do |vb|
+      vb.name = 'asterix'
+    end
+#    asterix.vm.provision "Install Python.", type: "shell", privileged: true, inline: "pacman -S extra/python" # Needed by Ansible
+    asterix.vm.provision :ansible do |ansible|
+      ansible.extra_vars = {
+        ansible_python_interpreter: "python3"
+      }
+      ansible.playbook = "provisioning/playbook.yml"
+    end
+  end
+  
   # jollyjumper {{{2
   ################################################################
   

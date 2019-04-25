@@ -6,6 +6,8 @@ This project contains Vagrant files for building various virtual machines. mainl
 Machine name | OS version                | Purpose
 ------------ | ------------------------- | --------------------------
 averell      | FreeBSD 12                | Try.
+jack         | ArchLinux                 | Try.
+asterix      | Gentoo                    | Try.
 crocodiles   | macOS High Sierra 10.13.4 | 
 guardduck    | Debian 8.10 (Jessie 64)   | bioconda-recipes testing
 joe          | Ubuntu Trusty             | Galaxy instance with my tools in DEV version, based on w4m-vm.
