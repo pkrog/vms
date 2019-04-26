@@ -1,17 +1,21 @@
 # Xorg
-- name: Install Xorg # FreeBSD
+- name: Install Xorg
   package: name=xorg state={{ pkg_state }}
 
 # Xfce
-- name: Install Xfce  # FreeBSD
+- name: Install Xfce
   package: name={{ xfce4_pkg }} state={{ pkg_state }}
   
 # Enable DBUS
-- name: Enable DBUS # FreeBSD
+- name: Enable DBUS
   lineinfile:
       path: /etc/rc.conf
       line: 'dbus_enable=YES'
+  when: ansible_facts['distribution'] == 'FreeBSD'
 
 # VirtualBox guest additions
-- name: Install VirtualBox guest additions
-  package: name={{ vbox_guest_additions_pkg }} state={{ pkg_state }}
+- name: Remove VirtualBox guest additions without X support
+  package: name={{ vbox_guest_additions_pkg_no_x_to_remove }} state=absent
+  when: vbox_guest_additions_pkg_no_x_to_remove is defined
+- name: Install VirtualBox guest additions with X support
+  package: name={{ vbox_guest_additions_pkg_with_x }} state={{ pkg_state }}

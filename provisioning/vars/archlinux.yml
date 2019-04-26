@@ -1,1 +1,4 @@
 xfce4_pkg: extra/xfce4
+vbox_guest_additions_pkg_no_x_to_remove: virtualbox-guest-utils-nox
+vbox_guest_additions_pkg_with_x: community/virtualbox-guest-utils
+xfce4_xinitrc_content: "exec startxfce4"

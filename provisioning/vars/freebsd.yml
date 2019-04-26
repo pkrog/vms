@@ -1,5 +1,6 @@
 gnumake_pkg: gmake
 gnumake_prg: gmake
 pkg_state: present
-vbox_guest_additions_pkg: virtualbox-ose-additions-5.2.26_4
+vbox_guest_additions_pkg_with_x: virtualbox-ose-additions-5.2.26_4
 xfce4_pkg: xfce
+xfce4_xinitrc_content: ". /usr/local/etc/xdg/xfce4/xinitrc"

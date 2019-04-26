@@ -6,4 +6,4 @@
 - name: Create .xinitrc
   copy:
       dest: ~/.xinitrc
-      content: ". /usr/local/etc/xdg/xfce4/xinitrc"  # FreeBSD
+      content: "{{ xfce4_xinitrc_content }}"
