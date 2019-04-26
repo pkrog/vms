@@ -5,3 +5,8 @@ r_pkg: r-base
 zlib_dev_pkg: zlib-dev
 libcurl_dev_pkg: libcurl-dev
 libblas_dev_pkg: libblas-dev
+git_pkg: git
+screen_pkg: screen
+vim_pkg: vim
+xorg_pkg: xorg
+xfce4_xinitrc_content: "exec startxfce4"

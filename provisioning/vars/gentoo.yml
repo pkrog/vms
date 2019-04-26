@@ -1,0 +1,5 @@
+git_pkg: dev-vcs/git
+screen_pkg: app-misc/screen
+vim_pkg: app-editors/vim
+xorg_pkg: x11-base/xorg-x11
+xfce4_pkg: xfce-base/xfce4-meta

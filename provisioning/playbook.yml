@@ -4,6 +4,10 @@
     - include_vars: "vars/{{ ansible_os_family | lower }}.yml"
       ignore_errors: yes
  
+- hosts: asterix # No Xfce for Gentoo (too long to compile)
+  roles:
+      - dev
+
 - hosts: averell jack asterix
   roles:
       - dev

@@ -52,7 +52,7 @@ Vagrant.configure(2) do |config|
     asterix.vm.provider :virtualbox do |vb|
       vb.name = 'asterix'
     end
-#    asterix.vm.provision "Install Python.", type: "shell", privileged: true, inline: "pacman -S extra/python" # Needed by Ansible
+    asterix.vm.provision "Install equery.", type: "shell", privileged: true, inline: "emerge app-portage/gentoolkit" # Needed by Ansible
     asterix.vm.provision :ansible do |ansible|
       ansible.extra_vars = {
         ansible_python_interpreter: "python3"

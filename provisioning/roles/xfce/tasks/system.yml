@@ -1,6 +1,6 @@
 # Xorg
 - name: Install Xorg
-  package: name=xorg state={{ pkg_state }}
+  package: name={{ xorg_pkg }} state={{ pkg_state }}
 
 # Xfce
 - name: Install Xfce

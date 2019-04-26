@@ -1,6 +1,6 @@
 # Git
 - name: Install git
-  package: name=git state={{ pkg_state }}
+  package: name={{ git_pkg }} state={{ pkg_state }}
 
 # Make
 - name: Install GNU make
@@ -13,8 +13,8 @@
 
 # Screen
 - name: Install screen
-  package: name=screen state={{ pkg_state }}
+  package: name={{ screen_pkg }} state={{ pkg_state }}
 
 # Vim
 - name: Install vim
-  package: name=vim state={{ pkg_state }}
+  package: name={{ vim_pkg }} state={{ pkg_state }}
