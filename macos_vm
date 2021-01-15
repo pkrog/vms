@@ -167,7 +167,8 @@ function create_vm {
 	debug 1 "Creating HDD..."
 	vm_folder=$(get_vm_folder)
 	hdd_file="$vm_folder/$NAME.vdi"
-	vboxmanage createmedium disk --filename "$hdd_file" --size 30 --format VDI
+	size=$((30 * 1000)) # in MB => 30GB
+	vboxmanage createmedium disk --filename "$hdd_file" --size $size --format VDI
 
 	# Attach HDD to controler
 	debug 1 "Attaching HDD to controler..."
