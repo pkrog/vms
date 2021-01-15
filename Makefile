@@ -3,6 +3,12 @@ W4M_MACHINES=joe william
 
 all:
 
+crocodiles:
+	./macos_vm -b -n crocodiles
+
+crocodiles.clean:
+	./macos_vm -d -n crocodiles
+
 # W4M-VM machines {{{1
 ################################################################
 
@@ -47,4 +53,4 @@ $(addsuffix .rebuild,$(MACHINES)): %.rebuild: %.clean %.up
 
 clean: $(addsuffix .clean,$(MACHINES))
 
-.PHONY: all clean jollyjumper
+.PHONY: all clean jollyjumper crocodiles
