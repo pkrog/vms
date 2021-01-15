@@ -151,6 +151,7 @@ function create_vm {
 	flags+=" --cpus 2"
 	flags+=" --chipset ich9"
 	flags+=" --mouse usbtablet"
+	flags+=" --keyboard usb"
 	flags+=" --ioapic on"
 	flags+=" --firmware efi"
 	flags+=" --rtcuseutc on"
