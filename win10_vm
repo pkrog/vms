@@ -1,0 +1,201 @@
+#!/bin/bash
+# vi: se fdm=marker
+
+SCRIPT_FILE=$(basename $0)
+SCRIPT_DIR=$(dirname $0)
+
+NAME=luckyluke
+YES=yes
+DEBUG=0
+DELETE=
+BUILD=
+ISO=$HOME/isos/Win10_20H2_French_x64.iso
+START=
+
+# Error {{{1
+################################################################
+
+error() {
+	local msg="$1"
+
+	echo "[ERROR] $msg" >&2
+	exit 1
+}
+
+# Debug {{{1
+################################################################
+
+debug() {
+	local lvl=$1
+	local msg="$2"
+
+	[[ $DEBUG -ge $lvl ]] && echo "[DEBUG] $msg" >&2
+}
+
+# Info {{{1
+################################################################
+
+info() {
+	local msg="$1"
+
+	[[ $QUIET == $YES ]] || echo "[INFO] $msg" >&2
+}
+
+# Print help {{{1
+################################################################
+
+function print_help {
+	cat <<END_HELP
+Create and configure "$NAME" VM for installing Windows 10.
+
+Usage: $SCRIPT_FILE -n <machine_name> [options]
+
+Options:
+
+   -b, --build       Build VM unless it already exists.
+
+   -d, --delete      Delete VM if it already exists.
+
+   -g, --debug       Increase debugging level by 1. Default is 0.
+
+   -h, --help        Print this help message.
+
+   -i, --iso <iso>   Set the path to the Windows 10 ISO file. Default value is
+                     "$ISO".
+
+   -n, --name <name> Set the name of the machine.
+
+   -s, --start       Start virtual machine.
+END_HELP
+}
+
+# Read args {{{1
+################################################################
+
+function read_args {
+
+	local args="$*" # save arguments for debugging purpose
+
+	while true ; do
+		case $1 in
+			-b|--build)      BUILD=$YES ;;
+			-d|--delete)     DELETE=$YES ;;
+			-g|--debug)      ((++DEBUG)) ;;
+			-h|--help)       print_help ; exit 0 ;;
+			-i|--iso)        ISO="$2" ; shift ;;
+			-n|--name)       NAME="$2" ; shift ;;
+			-s|--start)      START=$YES ;; 
+			-|--|--*)        error "Illegal option $1." ;;
+			-?)              error "Unknown option $1." ;;
+			-[^-]*)          split_opt=$(echo $1 | sed 's/^-//' | sed 's/\([a-zA-Z]\)/ -\1/g') ; set -- $1$split_opt "${@:2}" ;;
+			*) break
+		esac
+		shift
+	done
+
+	# Check arguments
+	[[ -z "$*" ]] || error "Forbidden remaining arguments: $*."
+	[[ -n $ISO ]] || error "You must set the path to the Windows 10 ISO file with -i option."
+	[[ -f $ISO ]] || error "Cannot find ISO file \"$ISO\"."
+	[[ -n $NAME ]] || error "You must set the machine name with the -n option."
+
+	# Debug
+	debug 1 "Arguments are : $args"
+	debug 1 "BUILD=$BUILD"
+	debug 1 "DEBUG=$DEBUG"
+	debug 1 "DELETE=$DELETE"
+	debug 1 "NAME=$NAME"
+	debug 1 "ISO=$ISO"
+	debug 1 "START=$START"
+}
+
+# VM exists {{{1
+################################################################
+
+function vm_exists {
+	vboxmanage showvminfo $NAME >/dev/null 2>&1 || return 1
+}
+
+# Delete VM {{{1
+################################################################
+
+function delete_vm {
+
+	! vm_exists || vboxmanage unregistervm "$NAME" --delete || error "Unable to delete virtual machine $NAME."
+}
+
+# Get VM folder {{{1
+################################################################
+
+function get_vm_folder {
+	vboxmanage showvminfo $NAME | grep '^Config file:' | sed 's!^Config file: *\(.*\)/[^/]*$!\1!'
+}
+
+# Create VM {{{1
+################################################################
+
+function create_vm {
+
+	# Error if VM exists
+	! vm_exists || error "Virtual machine $NAME already exists."
+
+	# Create VM
+	debug 1 "Creating VM..."
+	vboxmanage createvm --name "$NAME" --ostype "Windows10_64" --register || error "Failure when creating VM."
+
+	# Tune VM
+	debug 1 "Tuning VM..."
+	flags=""
+	flags+=" --memory 2048"
+	flags+=" --vram 128"
+	flags+=" --cpus 2"
+	flags+=" --chipset ich9"
+	flags+=" --mouse usbtablet"
+	flags+=" --keyboard usb"
+	flags+=" --ioapic on"
+	flags+=" --firmware efi"
+	flags+=" --rtcuseutc on"
+	flags+=" --pae on"
+	debug 1 "FLAGS=$flags"
+	vboxmanage modifyvm "$NAME" $flags || error "Failure when setting up VM."
+                           
+	# Create SATA controler
+	debug 1 "Setting controlers..."
+	satactl=satactl
+	vboxmanage storagectl "$NAME" --name $satactl --add sata || error "Cannot set up SATA controler."
+
+	# Create HDD
+	debug 1 "Creating HDD..."
+	vm_folder=$(get_vm_folder)
+	hdd_file="$vm_folder/$NAME.vdi"
+	size=$((30 * 1000)) # in MB => 30GB
+	vboxmanage createmedium disk --filename "$hdd_file" --size $size --format VDI
+
+	# Attach HDD to controler
+	debug 1 "Attaching HDD to controler..."
+	vboxmanage storageattach "$NAME" --storagectl $satactl --port 0 --type hdd --medium "$hdd_file"
+
+	# Attach ISO on DVD player
+	debug 1 "Attaching ISO/DVD to controler..."
+	vboxmanage storageattach "$NAME" --storagectl $satactl --port 1 --type dvddrive --medium "$ISO"
+}
+
+# Start VM {{{1
+################################################################
+
+function start_vm {
+	! vm_exists || vboxmanage startvm "$NAME" || error "Failed starting virtual machine $NAME."
+}
+
+# Main {{{1
+################################################################
+
+read_args "$@"
+
+[[ $DELETE == $YES ]] && delete_vm
+[[ $BUILD == $YES ]] && create_vm
+[[ $DELETE == $YES && $BUILD != $YES ]] || vm_exists || error "Virtual machine $NAME does not exist."
+[[ $START == $YES ]] && start_vm
+
+exit 0
+

@@ -9,6 +9,12 @@ crocodiles:
 crocodiles.clean:
 	./macos_vm -d -n crocodiles
 
+luckyluke:
+	./win10_vm -b -n luckyluke
+
+luckyluke.clean:
+	./win10_vm -d -n luckyluke
+
 # W4M-VM machines {{{1
 ################################################################
 
