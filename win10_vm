@@ -9,7 +9,7 @@ YES=yes
 DEBUG=0
 DELETE=
 BUILD=
-ISO=$HOME/isos/Win10_20H2_French_x64.iso
+ISO=$HOME/data/isos/Win10_20H2_French_x64.iso
 START=
 
 # Error {{{1
