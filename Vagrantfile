@@ -7,6 +7,18 @@ Vagrant.configure(2) do |config|
   
   config.vagrant.plugins = "vagrant-alpine" # For setting hostname on alpine
   
+  config.vm.define "abraracourcix" do |abraracourcix|
+    abraracourcix.vm.box = "Microsoft/EdgeOnWindows10"
+    abraracourcix.vm.box_version = "1.0"
+    abraracourcix.vm.hostname = "abraracourcix"
+    abraracourcix.ssh.password = "Passw0rd!"
+    abraracourcix.ssh.username = "IEUser"
+    abraracourcix.vm.synced_folder '.', '/vagrant', disabled: true
+    abraracourcix.vm.provider :virtualbox do |vb|
+      vb.name = 'abraracourcix'
+    end
+  end
+  
   # averell {{{2
   ################################################################
   
