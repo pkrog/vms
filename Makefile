@@ -1,4 +1,4 @@
-MACHINES=jollyjumper
+MACHINES=jollyjumper abraracourcix
 W4M_MACHINES=joe william
 
 all:
@@ -41,20 +41,20 @@ $(addsuffix .ssh,$(W4M_MACHINES)): %.ssh:
 $(MACHINES): %: %.up
 
 $(addsuffix .ssh,$(MACHINES)): %.ssh: .vagrant/machines/%/virtualbox/id
-	VAGRANT_VAGRANTFILE=$(basename $@).vagrant vagrant ssh
+	vagrant ssh $(patsubst %.ssh,%,$@)
 
 $(addsuffix .halt,$(MACHINES)): %.halt: .vagrant/machines/%/virtualbox/id
-	VAGRANT_VAGRANTFILE=$(basename $@).vagrant vagrant halt
+	vagrant halt $(patsubst %.halt,%,$@)
 
 $(addsuffix .up,$(MACHINES)): %.up: .vagrant/machines/%/virtualbox/id
 
-.vagrant/machines/%/virtualbox/id: %.vagrant
-	VAGRANT_VAGRANTFILE=$< vagrant up
+.vagrant/machines/%/virtualbox/id: Vagrantfile
+	vagrant up $(patsubst .vagrant/machines/%/virtualbox/id,%,$@)
 
 $(addsuffix .rebuild,$(MACHINES)): %.rebuild: %.clean %.up
 
 %.clean:
-	VAGRANT_VAGRANTFILE=$(basename $@).vagrant vagrant destroy -f
+	vagrant destroy -f $(patsubst %.clean,%,$@)
 	[ -z "$$(VBoxManage list vms | grep ^.$(basename $@))" ] || VBoxManage unregistervm --delete $(basename $@)
 
 clean: $(addsuffix .clean,$(MACHINES))

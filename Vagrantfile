@@ -7,6 +7,9 @@ Vagrant.configure(2) do |config|
   
   config.vagrant.plugins = "vagrant-alpine" # For setting hostname on alpine
   
+  # abraracourcix {{{2
+  ################################################################
+  
   config.vm.define "abraracourcix" do |abraracourcix|
     abraracourcix.vm.box = "Microsoft/EdgeOnWindows10"
     abraracourcix.vm.box_version = "1.0"
@@ -18,7 +21,7 @@ Vagrant.configure(2) do |config|
       vb.name = 'abraracourcix'
     end
   end
-  
+
   # averell {{{2
   ################################################################
   
