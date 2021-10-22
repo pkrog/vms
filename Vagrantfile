@@ -11,12 +11,20 @@ Vagrant.configure(2) do |config|
   ################################################################
   
   config.vm.define "abraracourcix" do |abraracourcix|
-    abraracourcix.vm.box = "Microsoft/EdgeOnWindows10"
-    abraracourcix.vm.box_version = "1.0"
+    abraracourcix.vm.guest = :windows
+    abraracourcix.vm.communicator = :winrm
+    abraracourcix.winrm.username = "IEUser"
+    abraracourcix.winrm.password = "Passw0rd!"
+    abraracourcix.vm.box = "breeze/win10-edge"
     abraracourcix.vm.hostname = "abraracourcix"
-    abraracourcix.ssh.password = "Passw0rd!"
-    abraracourcix.ssh.username = "IEUser"
-    abraracourcix.vm.synced_folder '.', '/vagrant', disabled: true
+#    abraracourcix.ssh.username = "IEUser"
+#    abraracourcix.ssh.password = "Passw0rd!"
+#    abraracourcix.ssh.insert_key = false
+#    abraracourcix.vm.network "forwarded_port",
+#       host: 33389,
+#       guest: 3389,
+#       id: "rdp",
+#       auto_correct: true
     abraracourcix.vm.provider :virtualbox do |vb|
       vb.name = 'abraracourcix'
     end
