@@ -12,6 +12,7 @@ BUILD=
 ISO=$HOME/data/isos/Win10_20H2_French_x64.iso
 START=
 
+[[ -f $ISO ]] || ISO=$HOME/data/isos_n_pkgs/Win10_20H2_French_x64.iso
 # Error {{{1
 ################################################################
 
